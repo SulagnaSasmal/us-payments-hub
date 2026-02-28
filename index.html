@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>US Payments Hub — Operations & Compliance Reference</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <a class="header-brand" href="index.html">US Payments Hub <span>· Operations Reference</span></a>
+  <span class="header-rail-badge">Internal Use · Operations &amp; Compliance</span>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-section">Overview</div>
+  <a href="index.html" class="active">Introduction</a>
+  <a href="index.html#rail-comparison">Rail Comparison</a>
+  <a href="index.html#regulatory">Regulatory Framework</a>
+
+  <div class="nav-section">Payment Rails</div>
+  <a href="ach.html">ACH — Automated Clearing House</a>
+  <a href="fedwire.html">Fedwire — RTGS Wire Transfer</a>
+  <a href="swift.html">SWIFT — Cross-Border Payments</a>
+  <a href="rtp.html">RTP — Real-Time Payments</a>
+  <a href="fednow.html">FedNow — Federal Reserve</a>
+  <a href="card.html">Card Network Processing</a>
+
+  <div class="nav-section">Reference</div>
+  <a href="scenarios.html">Scenario Walkthroughs</a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <h1>US Payments Hub</h1>
+  <p class="topic-meta">
+    <span>Audience: Operations &amp; Compliance</span>
+    <span>Last updated: March 2026</span>
+    <span>Version: 1.0</span>
+  </p>
+
+  <p>
+    This reference guide covers the five major US payment rails used by financial institutions for domestic and cross-border fund transfers. It is intended for operations staff, compliance teams, and settlement analysts responsible for payment processing, exception handling, and regulatory adherence.
+  </p>
+  <p>
+    Each section documents the rail's processing flow, settlement timeline, compliance requirements, return and exception handling, and reconciliation procedures. Scenario walkthroughs illustrate common operational situations across multiple rails.
+  </p>
+
+  <div class="note">
+    <strong>Scope</strong>
+    This guide covers the US domestic payment landscape as of 2026, including the Fedwire ISO 20022 migration (completed March 2025) and FedNow adoption status. Card network processing is covered at an overview level only.
+  </div>
+
+  <!-- RAIL OVERVIEW CARDS -->
+  <h2>Payment Rails at a Glance</h2>
+
+  <div class="rail-grid">
+    <a class="rail-card" href="ach.html">
+      <div class="rail-card-icon">⚙️</div>
+      <div class="rail-card-title">ACH</div>
+      <div class="rail-card-desc">Batch processing for direct deposits, bill pay, B2B transfers. NACHA-regulated. 1–2 day settlement; same-day available.</div>
+    </a>
+    <a class="rail-card" href="fedwire.html">
+      <div class="rail-card-icon">🏛️</div>
+      <div class="rail-card-title">Fedwire</div>
+      <div class="rail-card-desc">Federal Reserve RTGS system for high-value, irrevocable, same-day wire transfers. ISO 20022 since March 2025.</div>
+    </a>
+    <a class="rail-card" href="swift.html">
+      <div class="rail-card-icon">🌐</div>
+      <div class="rail-card-title">SWIFT</div>
+      <div class="rail-card-desc">Cross-border correspondent banking network. MT→MX (ISO 20022) migration underway. SWIFT gpi for tracking.</div>
+    </a>
+    <a class="rail-card" href="rtp.html">
+      <div class="rail-card-icon">⚡</div>
+      <div class="rail-card-title">RTP</div>
+      <div class="rail-card-desc">The Clearing House real-time credit push rail. Irrevocable, &lt;10 seconds, 24/7/365, up to $1M per transaction.</div>
+    </a>
+    <a class="rail-card" href="fednow.html">
+      <div class="rail-card-icon">🔵</div>
+      <div class="rail-card-title">FedNow</div>
+      <div class="rail-card-desc">Federal Reserve instant payment service (live July 2023). ISO 20022-native. Parallel rail to RTP; broader community bank reach.</div>
+    </a>
+    <a class="rail-card" href="card.html">
+      <div class="rail-card-icon">💳</div>
+      <div class="rail-card-title">Card Networks</div>
+      <div class="rail-card-desc">Visa/Mastercard four-party model. Authorization, clearing, and settlement cycle. Chargeback and dispute overview.</div>
+    </a>
+  </div>
+
+  <!-- RAIL COMPARISON TABLE -->
+  <h2 id="rail-comparison">Rail Comparison Table</h2>
+  <p>The table below provides a side-by-side summary of key operational characteristics for each payment rail.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Rail</th>
+          <th>Operator</th>
+          <th>Settlement</th>
+          <th>Irrevocable?</th>
+          <th>Max Amount</th>
+          <th>Hours</th>
+          <th>Message Standard</th>
+          <th>Primary Use Case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>ACH Credit</strong></td>
+          <td>NACHA / Fed / EPN</td>
+          <td>Next-day (T+1) or same-day</td>
+          <td>No — returns possible up to R06</td>
+          <td>No limit (NACHA rules)</td>
+          <td>Business days</td>
+          <td>NACHA CCD, PPD, CTX…</td>
+          <td>Payroll, B2B, bill pay</td>
+        </tr>
+        <tr>
+          <td><strong>ACH Debit</strong></td>
+          <td>NACHA / Fed / EPN</td>
+          <td>Next-day or same-day</td>
+          <td>No — returns possible</td>
+          <td>No limit</td>
+          <td>Business days</td>
+          <td>NACHA PPD, WEB, TEL…</td>
+          <td>Consumer bill pay, recurring debits</td>
+        </tr>
+        <tr>
+          <td><strong>Fedwire</strong></td>
+          <td>Federal Reserve</td>
+          <td>Same-day, immediate final</td>
+          <td>Yes — once settled</td>
+          <td>No limit</td>
+          <td>Mon–Fri 21:00–18:30 ET</td>
+          <td>ISO 20022 (pacs.008/009)</td>
+          <td>Large-value, time-critical wires</td>
+        </tr>
+        <tr>
+          <td><strong>SWIFT</strong></td>
+          <td>SWIFT (member-owned)</td>
+          <td>1–5 days (correspondent chain)</td>
+          <td>No — recall possible (gSRP)</td>
+          <td>No limit</td>
+          <td>24/7 (messaging)</td>
+          <td>MT (legacy) / MX ISO 20022</td>
+          <td>Cross-border, international transfers</td>
+        </tr>
+        <tr>
+          <td><strong>RTP</strong></td>
+          <td>The Clearing House (TCH)</td>
+          <td>Immediate (real-time)</td>
+          <td>Yes — no reversals</td>
+          <td>$1,000,000</td>
+          <td>24/7/365</td>
+          <td>ISO 20022 pacs.008</td>
+          <td>Consumer/business instant pay</td>
+        </tr>
+        <tr>
+          <td><strong>FedNow</strong></td>
+          <td>Federal Reserve</td>
+          <td>Immediate (real-time)</td>
+          <td>Yes — no reversals</td>
+          <td>$500,000 (default); up to $1M</td>
+          <td>24/7/365</td>
+          <td>ISO 20022 pacs.008</td>
+          <td>Consumer/business instant pay</td>
+        </tr>
+        <tr>
+          <td><strong>Card (Visa/MC)</strong></td>
+          <td>Network (Visa/Mastercard)</td>
+          <td>T+1 to T+2 (net settlement)</td>
+          <td>No — chargebacks possible</td>
+          <td>Issuer-defined</td>
+          <td>24/7 (authorization)</td>
+          <td>ISO 8583 / proprietary</td>
+          <td>Point-of-sale, e-commerce</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- REGULATORY FRAMEWORK -->
+  <h2 id="regulatory">Regulatory Framework</h2>
+  <p>All US payment rails operate under a layered regulatory framework. Understanding which rules apply to each transaction type is a core compliance responsibility.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Rail</th>
+          <th>Primary Regulation / Standard</th>
+          <th>Governing Body</th>
+          <th>Key Compliance Requirement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>ACH</strong></td>
+          <td>NACHA Operating Rules</td>
+          <td>NACHA (Electrum Payments)</td>
+          <td>Originator agreement, return rate thresholds, OFAC screening</td>
+        </tr>
+        <tr>
+          <td><strong>ACH</strong></td>
+          <td>Regulation E (12 CFR Part 205)</td>
+          <td>CFPB / Federal Reserve</td>
+          <td>Consumer error resolution, unauthorized transaction liability</td>
+        </tr>
+        <tr>
+          <td><strong>Fedwire</strong></td>
+          <td>Regulation J (12 CFR Part 210)</td>
+          <td>Federal Reserve</td>
+          <td>Funds transfer operating rules; RTGS finality</td>
+        </tr>
+        <tr>
+          <td><strong>SWIFT</strong></td>
+          <td>Regulation S, BSA/AML, OFAC</td>
+          <td>FinCEN, OFAC, Federal Reserve</td>
+          <td>Travel Rule (31 CFR 103.33), sanctions screening, CTR/SAR filing</td>
+        </tr>
+        <tr>
+          <td><strong>RTP / FedNow</strong></td>
+          <td>TCH RTP Rulebook / FedNow Service Rules</td>
+          <td>TCH / Federal Reserve</td>
+          <td>Credit-push only, irrevocability, participant agreement compliance</td>
+        </tr>
+        <tr>
+          <td><strong>All rails</strong></td>
+          <td>Bank Secrecy Act (BSA), USA PATRIOT Act</td>
+          <td>FinCEN</td>
+          <td>AML program, suspicious activity reporting (SAR), CIP</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="warning">
+    <strong>Compliance Note</strong>
+    OFAC sanctions screening is mandatory for all outgoing and incoming payment instructions regardless of rail. Any match against the SDN List requires immediate hold and reporting. Do not process the payment pending review by the Compliance team.
+  </div>
+
+  <!-- HOW TO USE THIS GUIDE -->
+  <h2>How to Use This Guide</h2>
+  <ul>
+    <li>Use the sidebar navigation to go directly to a specific rail.</li>
+    <li>Use <a href="scenarios.html">Scenario Walkthroughs</a> for end-to-end operational examples involving returns, exceptions, and multi-rail decisions.</li>
+    <li>Each rail section includes: overview, processing flow, settlement timeline, return/exception handling, compliance requirements, and reconciliation procedures.</li>
+    <li>For regulatory guidance, always confirm with your institution's Compliance and Legal teams before action.</li>
+  </ul>
+
+  <div class="doc-nav">
+    <span></span>
+    <a href="ach.html">Next: ACH Processing →</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span>US Payments Hub · Operations &amp; Compliance Reference · v1.0 · March 2026</span>
+  <span>Internal Use Only</span>
+</footer>
+
+</body>
+</html>

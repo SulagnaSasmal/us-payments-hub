@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FedNow — US Payments Hub</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="header-brand" href="index.html">US Payments Hub <span>· Operations Reference</span></a>
+  <div class="header-breadcrumb"><a href="index.html">Home</a> › FedNow</div>
+  <span class="header-rail-badge">FedNow</span>
+</header>
+
+<nav class="sidebar">
+  <div class="nav-section">Overview</div>
+  <a href="index.html">Introduction</a>
+  <a href="index.html#rail-comparison">Rail Comparison</a>
+  <div class="nav-section">Payment Rails</div>
+  <a href="ach.html">ACH</a>
+  <a href="fedwire.html">Fedwire</a>
+  <a href="swift.html">SWIFT</a>
+  <a href="rtp.html">RTP — Real-Time Payments</a>
+  <a href="fednow.html" class="active">FedNow — Federal Reserve</a>
+  <a href="card.html">Card Network Processing</a>
+  <div class="nav-section">On This Page</div>
+  <a href="#overview">Overview</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#processing-flow">Processing Flow</a>
+  <a href="#limits">Transaction Limits</a>
+  <a href="#liquidity">Liquidity Management</a>
+  <a href="#compliance">Compliance</a>
+  <a href="#adoption">Adoption Status 2026</a>
+  <div class="nav-section">Reference</div>
+  <a href="scenarios.html">Scenario Walkthroughs</a>
+</nav>
+
+<main class="main">
+
+  <h1>FedNow — Federal Reserve Instant Payments</h1>
+  <p class="topic-meta">
+    <span>Rail: FedNow</span>
+    <span>Operator: Federal Reserve Banks</span>
+    <span>Standard: ISO 20022 (native)</span>
+    <span>Live: July 2023</span>
+    <span>Last updated: March 2026</span>
+  </p>
+
+  <h2 id="overview">Overview</h2>
+  <p>
+    FedNow is the Federal Reserve's instant payment service, launched in July 2023. It enables financial institutions of all sizes — from the largest national banks to the smallest community banks and credit unions — to offer their customers real-time account-to-account payment capabilities, 24 hours a day, 7 days a week, 365 days a year.
+  </p>
+  <p>
+    FedNow is built natively on <strong>ISO 20022</strong> from the ground up — unlike Fedwire, which migrated to ISO 20022 in 2025, FedNow has used the standard since inception. Payments settle in <strong>seconds</strong> with immediate finality. Like RTP, FedNow is a credit-push only system — no pull/debit transactions.
+  </p>
+
+  <div class="note">
+    <strong>Why FedNow? The Federal Reserve's Role</strong>
+    The Federal Reserve entered the instant payments market because TCH's RTP, while effective, is privately owned by the largest US banks. Community banks and credit unions expressed concern about reliance on a competitor-owned infrastructure. FedNow provides a neutral, Fed-operated alternative that directly leverages existing Federal Reserve master account relationships — simplifying settlement for smaller institutions.
+  </div>
+
+  <h2 id="architecture">System Architecture</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Attribute</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td>Settlement model</td><td>Gross, real-time, instant. Settled directly through participating institution's Federal Reserve master account (or pass-through settlement via a correspondent).</td></tr>
+        <tr><td>Message standard</td><td>ISO 20022 — pacs.008 (Credit Transfer), pacs.028 (Status Request), pain.013 (RfP)</td></tr>
+        <tr><td>Connectivity</td><td>FedLine network (same secure connection used for Fedwire). Institutions connecting via a correspondent use their correspondent's FedLine connection.</td></tr>
+        <tr><td>Participant types</td><td>Send-and-receive participants (full), or receive-only participants (accept FedNow credits but cannot originate)</td></tr>
+        <tr><td>Operating hours</td><td>24/7/365 — mandatory for all participants</td></tr>
+        <tr><td>Request for Payment</td><td>Supported via pain.013 message</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Participate via Direct Connection or Correspondent</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Participation Type</th><th>How It Works</th><th>Best For</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Direct Participant</strong></td>
+          <td>Institution has its own Federal Reserve master account and FedLine connection. Connects to FedNow directly.</td>
+          <td>Mid-to-large institutions with existing Fed infrastructure</td>
+        </tr>
+        <tr>
+          <td><strong>Correspondent / Agent Access</strong></td>
+          <td>Institution connects to FedNow through a correspondent bank or a FedNow-certified payment processor (e.g., core banking vendor). The correspondent holds the Fed account; settlement flows through the correspondent.</td>
+          <td>Community banks, credit unions, smaller institutions that do not maintain direct Fed master accounts</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="processing-flow">Processing Flow</h2>
+
+  <div class="flow-diagram">
+    <div class="flow-box">Sender<br>Initiates</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Sending Bank<br>Submits pacs.008</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">FedNow<br>Routes</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Receiving Bank<br>Accepts</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Settlement<br>(Fed Accounts)</div>
+  </div>
+
+  <ol class="step-list">
+    <li><strong>Sender Initiates:</strong> Customer initiates a credit transfer through the bank's channel (mobile, online banking, corporate payments portal). Specifies: receiving institution routing number, beneficiary account, amount, remittance information, and purpose (optional).</li>
+    <li><strong>Sending Bank Processing:</strong> The bank validates the payment instruction, performs OFAC screening, checks sender's account balance, confirms the Receiving Bank participates in FedNow, and constructs the ISO 20022 pacs.008 message.</li>
+    <li><strong>Submission to FedNow:</strong> The pacs.008 message is submitted to the FedNow service via FedLine. FedNow validates the message format and the Sending Bank's credit limit (available liquidity cap).</li>
+    <li><strong>Routing to Receiving Bank:</strong> FedNow routes the payment message to the designated Receiving Bank's FedLine connection.</li>
+    <li><strong>Receiving Bank Response:</strong> The Receiving Bank has a defined window (seconds) to accept the payment. If accepted: the bank posts the credit to the beneficiary account and sends a pacs.002 acceptance. If rejected: returns with reason code.</li>
+    <li><strong>Real-Time Settlement:</strong> FedNow simultaneously debits the Sending Bank's Federal Reserve master account and credits the Receiving Bank's Federal Reserve master account. Settlement is immediate, gross, and final.</li>
+    <li><strong>Confirmation:</strong> FedNow sends payment confirmation to the Sending Bank. The Sending Bank notifies the sender that the payment is complete.</li>
+  </ol>
+
+  <h2 id="limits">Transaction Limits</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Limit</th><th>Amount</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Default maximum per transaction</td>
+          <td><strong>$500,000</strong></td>
+          <td>The Federal Reserve set a default cap of $500,000 per transaction. Institutions can set lower limits for their customers.</td>
+        </tr>
+        <tr>
+          <td>Elevated limit</td>
+          <td>Up to <strong>$1,000,000</strong></td>
+          <td>Eligible participants may request an elevated limit from the Fed for specific use cases (e.g., mortgage funding, large business payments)</td>
+        </tr>
+        <tr>
+          <td>Minimum</td>
+          <td>$0.01</td>
+          <td>No practical minimum</td>
+        </tr>
+        <tr>
+          <td>Liquidity cap</td>
+          <td>Institution-defined</td>
+          <td>Each FedNow participant configures a liquidity management transfer (LMT) cap — a ceiling on FedNow outgoing volume relative to their Federal Reserve account balance.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="liquidity">Liquidity Management</h2>
+  <p>
+    Because FedNow settles directly through Federal Reserve master accounts in real time, institutions must actively manage their intraday liquidity. Unlike ACH (which nets at end of cycle), every FedNow payment immediately moves funds in the Fed account.
+  </p>
+
+  <h3>Liquidity Management Transfer (LMT)</h3>
+  <p>
+    FedNow includes an automated Liquidity Management Transfer (LMT) feature. When a participating institution's FedNow balance (subset of Fed master account allocated for FedNow) falls below a defined threshold, an LMT automatically moves funds from the institution's Federal Reserve master account to the FedNow balance — ensuring continuous availability without manual intervention.
+  </p>
+
+  <div class="tip">
+    <strong>Operations Recommendation</strong>
+    Configure LMT thresholds conservatively during initial FedNow rollout. Monitor actual payment volume patterns over 30–60 days before optimizing thresholds. Insufficient liquidity results in FedNow payments being declined at submission — a poor customer experience that is avoidable.
+  </div>
+
+  <h3>Weekend and After-Hours Liquidity</h3>
+  <ul>
+    <li>FedNow is 24/7/365, but Fedwire (used to pre-fund or move liquidity) is not. Pre-fund your FedNow liquidity position before Fedwire close on Friday (6:30 PM ET) to cover weekend payment volume.</li>
+    <li>Monitor weekend transaction patterns and build a liquidity buffer based on historical weekend peak volumes.</li>
+    <li>FedNow's LMT feature can be configured to draw from Federal Reserve account balances automatically — ensure this is enabled and tested before going live.</li>
+  </ul>
+
+  <h2 id="compliance">Compliance Requirements</h2>
+
+  <h3>OFAC Screening</h3>
+  <ul>
+    <li>Mandatory pre-submission screening for all FedNow outgoing payments.</li>
+    <li>Real-time screening must be integrated into the payment workflow — FedNow's speed (seconds) requires automated OFAC decisions, not manual review queues.</li>
+    <li>Configure auto-hold rules for potential matches and ensure Compliance can access the hold queue 24/7/365 (or establish escalation procedures for after-hours holds).</li>
+  </ul>
+
+  <h3>FedNow Service Rules</h3>
+  <ul>
+    <li>All FedNow participants must execute a FedNow Service Agreement with their Federal Reserve Bank.</li>
+    <li>Participants are bound by the FedNow Service Terms and Conditions, which govern: message standards, response time requirements, dispute resolution, and settlement obligations.</li>
+    <li>Receive-only participants must be capable of receiving and posting FedNow credits within the network's SLA window (typically under 20 seconds end-to-end).</li>
+  </ul>
+
+  <h3>Fraud Controls (24/7 Requirement)</h3>
+  <ul>
+    <li>FedNow operates at all hours — including 2:00 AM Sunday. Fraud monitoring systems must be active 24/7/365.</li>
+    <li>Automated rules-based fraud decisions (not manual reviews) are required for real-time payment approval.</li>
+    <li>Implement velocity controls: maximum number of FedNow payments per customer per hour/day, maximum cumulative amount per day.</li>
+    <li>First-time beneficiary controls: flag or step-up authenticate payments to first-time FedNow recipients above defined thresholds.</li>
+  </ul>
+
+  <h2 id="adoption">FedNow Adoption Status — 2026</h2>
+  <p>
+    As of early 2026, FedNow adoption has accelerated significantly from its July 2023 launch. Key milestones:
+  </p>
+  <ul>
+    <li>Over <strong>900 financial institutions</strong> connected to FedNow (vs. ~35 at launch)</li>
+    <li>Community banks and credit unions represent a significant share of FedNow participants — consistent with the Fed's design intent</li>
+    <li>Core banking vendors (Fiserv, FIS, Jack Henry) have all released FedNow integrations, enabling smaller institutions to participate via their existing core banking platform</li>
+    <li>RTP and FedNow interoperability remains an industry goal but is not yet implemented — payments must be routed to the correct rail based on the Receiving Bank's participation</li>
+  </ul>
+
+  <div class="note">
+    <strong>Dual-Rail Strategy</strong>
+    Most large US financial institutions participate in both RTP and FedNow. Payment routing logic in the core banking system must determine which rail to use for a given transaction based on: whether the Receiving Bank participates in RTP, FedNow, or both; customer preferences; and transaction amount (FedNow $500K default vs. RTP $1M).
+  </div>
+
+  <div class="doc-nav">
+    <a href="rtp.html">← Back to RTP</a>
+    <a href="card.html">Next: Card Networks →</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span>US Payments Hub · FedNow · v1.0 · March 2026</span>
+  <span>Internal Use Only</span>
+</footer>
+
+</body>
+</html>

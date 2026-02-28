@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card Network Processing — US Payments Hub</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="header-brand" href="index.html">US Payments Hub <span>· Operations Reference</span></a>
+  <div class="header-breadcrumb"><a href="index.html">Home</a> › Card Networks</div>
+  <span class="header-rail-badge">Card</span>
+</header>
+
+<nav class="sidebar">
+  <div class="nav-section">Overview</div>
+  <a href="index.html">Introduction</a>
+  <a href="index.html#rail-comparison">Rail Comparison</a>
+  <div class="nav-section">Payment Rails</div>
+  <a href="ach.html">ACH</a>
+  <a href="fedwire.html">Fedwire</a>
+  <a href="swift.html">SWIFT</a>
+  <a href="rtp.html">RTP</a>
+  <a href="fednow.html">FedNow</a>
+  <a href="card.html" class="active">Card Network Processing</a>
+  <div class="nav-section">On This Page</div>
+  <a href="#overview">Overview</a>
+  <a href="#four-party">Four-Party Model</a>
+  <a href="#lifecycle">Transaction Lifecycle</a>
+  <a href="#settlement">Settlement</a>
+  <a href="#chargebacks">Chargebacks</a>
+  <a href="#interchange">Interchange</a>
+  <div class="nav-section">Reference</div>
+  <a href="scenarios.html">Scenario Walkthroughs</a>
+</nav>
+
+<main class="main">
+
+  <h1>Card Network Processing</h1>
+  <p class="topic-meta">
+    <span>Networks: Visa, Mastercard, American Express, Discover</span>
+    <span>Message Standard: ISO 8583 / Network proprietary</span>
+    <span>Last updated: March 2026</span>
+  </p>
+
+  <div class="note">
+    <strong>Scope Note</strong>
+    This section provides an operational overview of card payment processing at a network level. It is intended to provide context for operations staff interacting with card settlement, chargeback, and dispute workflows. Card network certification, PCI DSS, and issuer/acquirer processing systems are beyond the scope of this guide.
+  </div>
+
+  <h2 id="overview">Overview</h2>
+  <p>
+    Card networks (Visa, Mastercard, American Express, Discover) facilitate electronic payments using debit and credit cards. Unlike ACH or Fedwire — which are bank-to-bank fund transfer systems — card networks operate a four-party model involving cardholders, issuers, merchants, and acquirers, connected by the card network's infrastructure.
+  </p>
+  <p>
+    Card transactions are <strong>not settled in real time</strong>. Authorization occurs instantly at point of sale; clearing and settlement happen through a batch process typically on T+1 or T+2 schedule.
+  </p>
+
+  <h2 id="four-party">The Four-Party Model</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Party</th><th>Role</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Cardholder</strong></td>
+          <td>Consumer or business that holds and uses the payment card</td>
+          <td>Individual making a retail purchase or online payment</td>
+        </tr>
+        <tr>
+          <td><strong>Issuer</strong></td>
+          <td>The bank that issued the cardholder's card. Authorizes transactions and is responsible for the cardholder relationship.</td>
+          <td>Chase, Bank of America, Wells Fargo (as card issuers)</td>
+        </tr>
+        <tr>
+          <td><strong>Card Network</strong></td>
+          <td>Operates the messaging and rules infrastructure between issuers and acquirers. Does not hold funds.</td>
+          <td>Visa, Mastercard, American Express, Discover</td>
+        </tr>
+        <tr>
+          <td><strong>Acquirer</strong></td>
+          <td>The bank or payment processor that processes card transactions on behalf of the merchant. Receives settlement funds and pays the merchant.</td>
+          <td>Stripe, Square, JPMorgan Chase Merchant Services</td>
+        </tr>
+        <tr>
+          <td><strong>Merchant</strong></td>
+          <td>Accepts card payment from the cardholder. Funded by the acquirer net of fees.</td>
+          <td>Retail store, e-commerce website, service provider</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="lifecycle">Card Transaction Lifecycle</h2>
+
+  <h3>Phase 1: Authorization</h3>
+  <div class="flow-diagram">
+    <div class="flow-box">Cardholder<br>Presents Card</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Merchant<br>Terminal</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Acquirer<br>Processor</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Card<br>Network</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Issuer<br>Authorizes</div>
+  </div>
+  <p>
+    At point of sale, the authorization message (ISO 8583 format) travels in real time from the merchant terminal through the acquirer to the card network, which routes it to the issuer. The issuer checks: available credit/funds, card status (not blocked/expired), fraud rules, and OFAC screening. The issuer responds with Approve or Decline in seconds. An authorization <strong>holds</strong> funds — it does not move them.
+  </p>
+
+  <h3>Phase 2: Clearing</h3>
+  <p>
+    At end of day, the merchant batches all authorized transactions and submits them to the acquirer for clearing. The acquirer sends clearing files to the card network. The network routes clearing items to the appropriate issuers. Clearing data includes the final transaction amounts (which may differ from the authorized amount — e.g., restaurant tips added post-authorization).
+  </p>
+
+  <h3>Phase 3: Settlement</h3>
+  <p>
+    The card network calculates net positions between all issuers and acquirers in its network. Settlement occurs through the card network's settlement bank (typically Fedwire or other Fed mechanism). The acquirer receives net funds (less interchange fees) and then remits payment to the merchant (less acquirer fees).
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Phase</th><th>Timing</th><th>Who Initiates</th><th>Financial Impact</th></tr></thead>
+      <tbody>
+        <tr><td>Authorization</td><td>Real-time (seconds)</td><td>Merchant terminal</td><td>Funds held (not moved)</td></tr>
+        <tr><td>Clearing</td><td>End of business day (batch)</td><td>Merchant → Acquirer</td><td>Final amounts confirmed</td></tr>
+        <tr><td>Settlement</td><td>T+1 to T+2</td><td>Card network → Issuers/Acquirers</td><td>Funds moved between banks</td></tr>
+        <tr><td>Merchant funding</td><td>T+1 to T+3</td><td>Acquirer → Merchant</td><td>Merchant receives net proceeds</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="settlement">Settlement at the Bank Level</h2>
+  <p>
+    For financial institutions that are card issuers, the daily card settlement cycle generates significant fund movements through the institution's accounts. Key operations considerations:
+  </p>
+  <ul>
+    <li><strong>Issuer settlement</strong>: The card network debits the issuer's settlement account daily for net card purchases by the bank's cardholders. The issuer recovers funds from cardholders via statement billing.</li>
+    <li><strong>Acquirer settlement</strong>: The card network credits the acquirer's settlement account for net transactions processed. The acquirer then funds merchant accounts.</li>
+    <li><strong>Reconciliation</strong>: Daily settlement must reconcile: network settlement files vs. core banking postings vs. Federal Reserve account activity.</li>
+  </ul>
+
+  <h2 id="chargebacks">Chargebacks and Disputes</h2>
+  <p>
+    A chargeback is a forced reversal of a card transaction, initiated by the cardholder's issuer. Chargebacks are the card network's consumer protection mechanism — they are equivalent to ACH R10 (unauthorized) but with a much longer window and more complex process.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Step</th><th>Action</th><th>Timeframe</th></tr></thead>
+      <tbody>
+        <tr><td>1. Cardholder Dispute</td><td>Cardholder contacts issuer to dispute a transaction</td><td>Up to 120 days from transaction date (Visa/Mastercard rules)</td></tr>
+        <tr><td>2. Issuer Initiates Chargeback</td><td>Issuer sends chargeback to card network with reason code</td><td>Within network timeframe</td></tr>
+        <tr><td>3. Network Routes to Acquirer</td><td>Card network debits acquirer's settlement account; routes chargeback to acquirer</td><td>T+3 to T+5 from initiation</td></tr>
+        <tr><td>4. Acquirer Notifies Merchant</td><td>Acquirer passes chargeback to merchant with reason code and documentation request</td><td>Within acquirer SLA</td></tr>
+        <tr><td>5. Merchant Representment</td><td>Merchant disputes the chargeback by providing evidence (receipt, delivery proof, authorization record)</td><td>Typically 20–30 days from chargeback</td></tr>
+        <tr><td>6. Issuer Reviews / Arbitration</td><td>Issuer reviews representment; if rejected, can escalate to card network arbitration</td><td>Varies — can extend to 90+ days</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Common Chargeback Reason Codes</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Network</th><th>Code</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr><td>Visa</td><td><code class="rc-code">10.4</code></td><td>Fraud — Card Absent Environment (CNP fraud)</td></tr>
+        <tr><td>Visa</td><td><code class="rc-code">13.1</code></td><td>Merchandise / Services Not Received</td></tr>
+        <tr><td>Visa</td><td><code class="rc-code">13.7</code></td><td>Cancelled Recurring Transaction</td></tr>
+        <tr><td>Mastercard</td><td><code class="rc-code">4853</code></td><td>Cardholder Dispute — Services Not Provided</td></tr>
+        <tr><td>Mastercard</td><td><code class="rc-code">4863</code></td><td>Cardholder Does Not Recognise (potential fraud)</td></tr>
+        <tr><td>Mastercard</td><td><code class="rc-code">4834</code></td><td>Point-of-Interaction Error</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="interchange">Interchange Fees</h2>
+  <p>
+    Interchange is the fee paid by the acquirer (on behalf of the merchant) to the issuer for each card transaction. It is set by the card networks and varies by card type, transaction type, and merchant category.
+  </p>
+  <ul>
+    <li><strong>Consumer credit card</strong>: Typically 1.5%–2.5% of transaction value</li>
+    <li><strong>Debit card (regulated)</strong>: Capped at $0.21 + 0.05% per transaction under the Durbin Amendment (Regulation II) for banks with assets ≥ $10 billion</li>
+    <li><strong>Debit card (exempt)</strong>: Not capped — smaller issuers (under $10B assets) may charge higher debit interchange</li>
+    <li><strong>Corporate / purchasing cards</strong>: Higher interchange than consumer cards — typically 2.5%–3.5%</li>
+  </ul>
+
+  <div class="doc-nav">
+    <a href="fednow.html">← Back to FedNow</a>
+    <a href="scenarios.html">Next: Scenario Walkthroughs →</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span>US Payments Hub · Card Networks · v1.0 · March 2026</span>
+  <span>Internal Use Only</span>
+</footer>
+
+</body>
+</html>

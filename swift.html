@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWIFT Cross-Border Payments — US Payments Hub</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <a class="header-brand" href="index.html">US Payments Hub <span>· Operations Reference</span></a>
+  <div class="header-breadcrumb">
+    <a href="index.html">Home</a> › SWIFT
+  </div>
+  <span class="header-rail-badge">SWIFT</span>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-section">Overview</div>
+  <a href="index.html">Introduction</a>
+  <a href="index.html#rail-comparison">Rail Comparison</a>
+
+  <div class="nav-section">Payment Rails</div>
+  <a href="ach.html">ACH — Automated Clearing House</a>
+  <a href="fedwire.html">Fedwire — RTGS Wire Transfer</a>
+  <a href="swift.html" class="active">SWIFT — Cross-Border Payments</a>
+  <a href="rtp.html">RTP — Real-Time Payments</a>
+  <a href="fednow.html">FedNow — Federal Reserve</a>
+  <a href="card.html">Card Network Processing</a>
+
+  <div class="nav-section">On This Page</div>
+  <a href="#overview">Overview</a>
+  <a href="#correspondent">Correspondent Banking</a>
+  <a href="#message-types">Message Types (MT / MX)</a>
+  <a href="#gpi">SWIFT gpi</a>
+  <a href="#processing-flow">Processing Flow</a>
+  <a href="#settlement">Settlement Timeline</a>
+  <a href="#compliance">Compliance &amp; Sanctions</a>
+  <a href="#exceptions">Exceptions &amp; Recalls</a>
+  <a href="#reconciliation">Reconciliation</a>
+
+  <div class="nav-section">Reference</div>
+  <a href="scenarios.html">Scenario Walkthroughs</a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <h1>SWIFT — Cross-Border Payments</h1>
+  <p class="topic-meta">
+    <span>Rail: SWIFT</span>
+    <span>Operator: Society for Worldwide Interbank Financial Telecommunication</span>
+    <span>Standard: MT (legacy) / ISO 20022 MX (current migration)</span>
+    <span>Last updated: March 2026</span>
+  </p>
+
+  <!-- OVERVIEW -->
+  <h2 id="overview">Overview</h2>
+  <p>
+    SWIFT (Society for Worldwide Interbank Financial Telecommunication) is a member-owned cooperative providing a global secure messaging network for financial institutions. SWIFT itself does not hold or transfer funds — it transmits standardized payment messages between correspondent banks, which then execute the actual fund movements through their respective accounts.
+  </p>
+  <p>
+    SWIFT connects over <strong>11,000 financial institutions in 200+ countries</strong> and is the dominant rail for international (cross-border) US dollar payments. All international wire transfers from US banks to foreign beneficiaries — or US beneficiary accounts receiving funds from abroad — travel over SWIFT or through SWIFT-connected correspondent banks.
+  </p>
+
+  <div class="note">
+    <strong>SWIFT vs. Fedwire</strong>
+    Fedwire handles domestic USD transfers within the US Federal Reserve system. SWIFT handles cross-border transfers requiring correspondent banking relationships. A US bank sending funds to a bank in Germany, for example, will use SWIFT messaging with Fedwire used domestically to fund the transaction.
+  </div>
+
+  <!-- CORRESPONDENT BANKING -->
+  <h2 id="correspondent">Correspondent Banking</h2>
+  <p>
+    Because most banks do not have direct accounts with every bank in every country, they use <strong>correspondent banks</strong> — intermediaries that hold accounts on behalf of other banks in a given currency and jurisdiction.
+  </p>
+
+  <h3>Nostro and Vostro Accounts</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Term</th><th>From Whose Perspective</th><th>Definition</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Nostro</strong><br>("our money, with you")</td>
+          <td>Bank A</td>
+          <td>An account held by Bank A at Bank B, in Bank B's currency</td>
+          <td>US Bank A holds a EUR account at Deutsche Bank (Bank B) to facilitate EUR payments</td>
+        </tr>
+        <tr>
+          <td><strong>Vostro</strong><br>("your money, with us")</td>
+          <td>Bank B</td>
+          <td>An account held by Bank A at Bank B, from Bank B's perspective</td>
+          <td>Same account — Deutsche Bank calls it Bank A's "vostro" account</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Correspondent Chain</h3>
+  <p>
+    A SWIFT payment may travel through multiple correspondent banks before reaching the final beneficiary bank. Each hop in the chain adds processing time and may deduct correspondent fees from the payment amount. SWIFT gpi (see below) was introduced to address transparency and speed in multi-hop chains.
+  </p>
+  <p>A typical correspondent chain for a US-to-India payment:</p>
+  <div class="flow-diagram">
+    <div class="flow-box">US Customer</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">US Bank<br>(Sending)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">US Correspondent<br>of Indian Bank</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Indian Bank<br>(Receiving)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Indian<br>Beneficiary</div>
+  </div>
+
+  <!-- MESSAGE TYPES -->
+  <h2 id="message-types">SWIFT Message Types — MT and MX</h2>
+  <p>
+    SWIFT has historically used <strong>MT (Message Type)</strong> format — proprietary, fixed-field, alphanumeric messages. SWIFT is currently migrating to <strong>MX messages (ISO 20022 XML)</strong> as part of the global ISO 20022 initiative. Both formats co-exist during the migration period.
+  </p>
+
+  <h3>Key MT Message Types for Payments</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>MT Code</th><th>Name</th><th>Direction</th><th>Use Case</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code class="rc-code">MT 103</code></td>
+          <td>Single Customer Credit Transfer</td>
+          <td>ODFI → Correspondent / Beneficiary Bank</td>
+          <td>Standard international customer wire transfer. The most common cross-border payment message. Contains ordering customer, beneficiary, amount, value date, and remittance fields.</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">MT 103 STP</code></td>
+          <td>MT 103 Straight-Through Processing</td>
+          <td>ODFI → Beneficiary Bank</td>
+          <td>Enhanced MT 103 for automated processing without manual intervention. Requires strict field completion standards.</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">MT 202</code></td>
+          <td>General Financial Institution Transfer</td>
+          <td>Bank → Correspondent Bank</td>
+          <td>Bank-to-bank transfer with no underlying customer transaction. Used for nostro funding and interbank settlements.</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">MT 202 COV</code></td>
+          <td>Cover Payment</td>
+          <td>ODFI → Correspondent</td>
+          <td>Interbank cover message sent alongside MT 103. The MT 103 carries payment details to the beneficiary bank; the MT 202 COV moves the actual funds. Must include originator information from the underlying MT 103.</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">MT 199</code></td>
+          <td>Free Format Message</td>
+          <td>Bilateral</td>
+          <td>Used for queries, recalls, and free-form bilateral communications between correspondent banks.</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">MT 192</code></td>
+          <td>Request for Cancellation</td>
+          <td>Sending Bank → Correspondent</td>
+          <td>Formal recall request for a previously sent MT 103 payment.</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">MT 299</code></td>
+          <td>Free Format Confirmation</td>
+          <td>Bilateral</td>
+          <td>Confirmation of payment or status update.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>ISO 20022 MX Equivalents</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Legacy MT</th><th>ISO 20022 MX Equivalent</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>MT 103</td><td><code>pacs.008</code></td><td>Customer Credit Transfer (FI to FI)</td></tr>
+        <tr><td>MT 202</td><td><code>pacs.009</code></td><td>Financial Institution Credit Transfer</td></tr>
+        <tr><td>MT 202 COV</td><td><code>pacs.009 ADV</code></td><td>Advice of Payment (cover payment)</td></tr>
+        <tr><td>MT 192 (recall)</td><td><code>camt.056</code></td><td>Payment Cancellation Request</td></tr>
+        <tr><td>MT 196 (recall response)</td><td><code>camt.029</code></td><td>Resolution of Investigation</td></tr>
+        <tr><td>MT 910 (credit confirmation)</td><td><code>camt.054</code></td><td>Bank-to-Customer Debit/Credit Notification</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <strong>SWIFT MT/MX Coexistence Period</strong>
+    SWIFT's global migration to ISO 20022 (MX) is ongoing through 2025–2026. During this period, banks may receive messages in either MT or MX format depending on the counterparty. Payment systems must support both formats. Where possible, prefer MX for new integrations.
+  </div>
+
+  <!-- SWIFT GPI -->
+  <h2 id="gpi">SWIFT gpi (Global Payments Innovation)</h2>
+  <p>
+    SWIFT gpi was launched in 2017 to address the core complaints about cross-border payments: lack of transparency, multi-day settlement, fee deductions without notice, and no end-to-end tracking. gpi is now mandatory for SWIFT member banks on cross-border payments.
+  </p>
+
+  <h3>Key gpi Features</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Feature</th><th>Description</th><th>Ops Benefit</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>UETR Tracking</strong></td>
+          <td>Every gpi payment carries a Unique End-to-end Transaction Reference (UETR) — a UUID assigned at initiation and passed through every hop.</td>
+          <td>Enables real-time status tracking via SWIFT Tracker. Customer inquiries can be answered in minutes instead of days.</td>
+        </tr>
+        <tr>
+          <td><strong>Same-Day Settlement SLA</strong></td>
+          <td>gpi banks commit to crediting beneficiary accounts within the business day — or faster. The SWIFT Tracker shows confirmation timestamps at each hop.</td>
+          <td>Dramatically reduces "where is my payment?" queries from customers.</td>
+        </tr>
+        <tr>
+          <td><strong>Fee Transparency</strong></td>
+          <td>Each bank in the correspondent chain must report fees deducted from the payment amount.</td>
+          <td>Customers can see exactly how much was deducted at each hop and why the beneficiary received a different amount.</td>
+        </tr>
+        <tr>
+          <td><strong>gSRP (Stop and Recall)</strong></td>
+          <td>SWIFT's global payment recall mechanism. Allows the Sending Bank to request recall of a payment from any point in the chain.</td>
+          <td>Standard recall mechanism for erroneous payments. Replaces ad-hoc phone/email recalls.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PROCESSING FLOW -->
+  <h2 id="processing-flow">Processing Flow</h2>
+
+  <ol class="step-list">
+    <li><strong>Customer Initiates International Wire:</strong> Customer submits the wire instruction with SWIFT BIC (Bank Identifier Code) of the beneficiary bank, IBAN (or local account number), beneficiary name/address, amount, value date, and payment purpose.</li>
+    <li><strong>OFAC and Sanctions Screening:</strong> Mandatory pre-submission screening of all parties (sender, beneficiary, all correspondent banks identified in the routing) against OFAC SDN, EU Consolidated List, UN Sanctions, and any other applicable lists. Any match triggers a hold.</li>
+    <li><strong>Correspondent Bank Selection:</strong> The Sending Bank's payment system determines the optimal correspondent chain based on the destination country, currency, and cost. The SWIFT BIC determines routing.</li>
+    <li><strong>MT 103 / pacs.008 Construction:</strong> The payment message is constructed with all required fields. The UETR is assigned at this point. In a cover payment structure, a separate MT 202 COV / pacs.009 is generated to move the interbank funds.</li>
+    <li><strong>Transmission via SWIFT Network:</strong> Messages are transmitted to the next hop in the correspondent chain via SWIFT FIN (for MT) or SWIFT MX.</li>
+    <li><strong>Correspondent Bank Processing:</strong> Each correspondent bank in the chain validates, screens, deducts fees (if applicable), and forwards the message to the next bank. gpi Tracker is updated at each hop.</li>
+    <li><strong>Beneficiary Bank Credits Account:</strong> The final beneficiary bank receives the payment, validates the beneficiary account, and credits the account. gpi confirmation (SWIFT camt.054) is sent back to the originating chain.</li>
+  </ol>
+
+  <!-- SETTLEMENT TIMELINE -->
+  <h2 id="settlement">Settlement Timeline</h2>
+  <p>
+    Unlike Fedwire (immediate) or ACH (defined batch cycle), SWIFT cross-border payment settlement timing depends on the correspondent chain length, currency, and destination country banking hours.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Payment Type</th><th>Typical Timeline</th><th>Factors Affecting Speed</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>USD to USD (US correspondent chain)</td>
+          <td>Same day to T+1</td>
+          <td>Submission time, Fedwire cut-off, correspondent availability</td>
+        </tr>
+        <tr>
+          <td>USD to EUR (US to Europe)</td>
+          <td>T+1 to T+2</td>
+          <td>TARGET2 operating hours, cut-off times in both time zones, correspondent hops</td>
+        </tr>
+        <tr>
+          <td>USD to INR, USD to emerging markets</td>
+          <td>T+2 to T+5</td>
+          <td>Regulatory holds, local clearing systems, correspondent chain depth, local banking holidays</td>
+        </tr>
+        <tr>
+          <td>gpi Same-Day commitment (Major currencies)</td>
+          <td>Same business day</td>
+          <td>Applies to gpi-member banks; subject to cut-off and bank operating hours</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- COMPLIANCE -->
+  <h2 id="compliance">Compliance and Sanctions Requirements</h2>
+
+  <h3>OFAC — Mandatory for All International Wires</h3>
+  <ul>
+    <li>Screen all parties in the payment (ordering customer, beneficiary, all named banks in the SWIFT message) against the OFAC SDN List.</li>
+    <li>For MT 103, screen fields: :50K (Ordering Customer), :57A (Account with Institution), :59 (Beneficiary Customer), and any :70 (Remittance Information) content.</li>
+    <li>A confirmed match requires immediate hold. Do not process or forward the wire. Escalate to Compliance within 1 business hour.</li>
+  </ul>
+
+  <h3>Travel Rule (31 CFR 103.33) — Bank Secrecy Act</h3>
+  <ul>
+    <li>For international wire transfers of <strong>$3,000 or more</strong>: Full originator information (name, address, account number) and beneficiary information must be included in the SWIFT message and passed to all subsequent correspondent banks.</li>
+    <li>The ISO 20022 pacs.008 structured format fully supports Travel Rule compliance. Ensure the <code>&lt;Dbtr&gt;</code> (Debtor) and <code>&lt;Cdtr&gt;</code> (Creditor) elements are completely populated.</li>
+    <li>For payments below $3,000: At minimum, include originator account number in the message.</li>
+  </ul>
+
+  <h3>AML Program Requirements</h3>
+  <ul>
+    <li>Monitor international wire volume for patterns consistent with money laundering: structuring below threshold, rapid movement through multiple accounts, payments to high-risk jurisdictions, round-number amounts.</li>
+    <li>Maintain a documented Risk-Based Approach (RBA) for correspondent banking relationships — Know Your Correspondent (KYC) due diligence must be performed and refreshed periodically.</li>
+    <li>De-risking (exiting correspondent relationships) without documented due diligence may itself trigger regulatory scrutiny — maintain records of all KYC assessments.</li>
+  </ul>
+
+  <!-- EXCEPTIONS -->
+  <h2 id="exceptions">Exception Handling and Recalls</h2>
+
+  <h3>Payment Query — SWIFT Tracker</h3>
+  <p>
+    For gpi payments, use the SWIFT Tracker (accessible via SWIFT gpi portal or integrated payment hub) to view real-time status. The UETR provides the tracking reference. Status codes:
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>gpi Status</th><th>Meaning</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-yellow">ACSP</span> — Accepted, Settlement In Progress</td><td>Payment is being processed in the correspondent chain</td><td>No action — monitor</td></tr>
+        <tr><td><span class="badge badge-green">ACCC</span> — Accepted, Credit Completed</td><td>Beneficiary account has been credited</td><td>Confirm with customer; close inquiry</td></tr>
+        <tr><td><span class="badge badge-red">RJCT</span> — Rejected</td><td>Payment was rejected by a bank in the chain</td><td>Review rejection reason; resubmit with corrections or return funds to customer</td></tr>
+        <tr><td><span class="badge badge-gray">PDNG</span> — Pending</td><td>Payment is held at a bank (e.g., compliance review)</td><td>Contact the holding bank; may require additional documentation</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>SWIFT gSRP — Recall Process</h3>
+  <ol class="step-list">
+    <li>Obtain the UETR from the original payment.</li>
+    <li>Submit a <code>camt.056</code> (Payment Cancellation Request) via SWIFT Tracker / gSRP portal. Include the UETR, reason for recall (DUPL = duplicate, FRAD = fraud, TECH = technical error, CUST = customer request), and UETR of the original payment.</li>
+    <li>The receiving bank must respond within 1 business day with a <code>camt.029</code> (Resolution of Investigation) — either confirming the recall or rejecting it (e.g., funds already paid to beneficiary).</li>
+    <li>If the beneficiary bank cannot recover the funds (beneficiary account drained), escalate to Legal. Cross-border fund recovery is complex and jurisdiction-dependent.</li>
+  </ol>
+
+  <!-- RECONCILIATION -->
+  <h2 id="reconciliation">Reconciliation Procedures</h2>
+
+  <h3>Nostro Account Reconciliation</h3>
+  <p>
+    SWIFT nostro account reconciliation is one of the most critical — and complex — reconciliation tasks in international operations. Each nostro account (USD account held at a correspondent bank abroad, or foreign currency account held domestically) must be reconciled daily.
+  </p>
+
+  <ol class="step-list">
+    <li>Obtain the correspondent bank's nostro account statement (MT 940/950 or camt.053) for the prior business day.</li>
+    <li>Match each debit and credit on the statement against internal SWIFT payment records (outgoing MT 103 debits, incoming MT 103 credits).</li>
+    <li>Identify any unmatched items — break items — and categorize: timing difference (expected to match next day), fee deduction, correspondent error, or unexplained.</li>
+    <li>Escalate unexplained break items over $10,000 (or institutionally-defined threshold) to the Operations Supervisor immediately.</li>
+    <li>Send queries via SWIFT MT 195/MT 199 or email to the correspondent bank for all unresolved items within 24 hours.</li>
+    <li>Confirm that nostro balances are sufficient for next-day outgoing wire commitments. Pre-fund nostro accounts ahead of high-volume periods (month-end, quarter-end).</li>
+  </ol>
+
+  <div class="doc-nav">
+    <a href="fedwire.html">← Back to Fedwire</a>
+    <a href="rtp.html">Next: RTP →</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span>US Payments Hub · SWIFT · v1.0 · March 2026</span>
+  <span>Internal Use Only</span>
+</footer>
+
+</body>
+</html>

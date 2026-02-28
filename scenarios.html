@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scenario Walkthroughs — US Payments Hub</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="header-brand" href="index.html">US Payments Hub <span>· Operations Reference</span></a>
+  <div class="header-breadcrumb"><a href="index.html">Home</a> › Scenarios</div>
+  <span class="header-rail-badge">Scenarios</span>
+</header>
+
+<nav class="sidebar">
+  <div class="nav-section">Overview</div>
+  <a href="index.html">Introduction</a>
+  <a href="index.html#rail-comparison">Rail Comparison</a>
+  <div class="nav-section">Payment Rails</div>
+  <a href="ach.html">ACH</a>
+  <a href="fedwire.html">Fedwire</a>
+  <a href="swift.html">SWIFT</a>
+  <a href="rtp.html">RTP</a>
+  <a href="fednow.html">FedNow</a>
+  <a href="card.html">Card Networks</a>
+  <div class="nav-section">On This Page</div>
+  <a href="#sc1">S-01: Standard ACH Payroll Credit</a>
+  <a href="#sc2">S-02: Same-Day ACH Credit — Urgent Vendor</a>
+  <a href="#sc3">S-03: ACH Return — Insufficient Funds</a>
+  <a href="#sc4">S-04: ACH Unauthorized Debit Dispute</a>
+  <a href="#sc5">S-05: Fedwire — Large-Value Settlement</a>
+  <a href="#sc6">S-06: Fedwire Error — Wrong Beneficiary</a>
+  <a href="#sc7">S-07: SWIFT — Cross-Border USD to EUR</a>
+  <a href="#sc8">S-08: SWIFT Recall — gSRP</a>
+  <a href="#sc9">S-09: RTP — Instant Consumer Payment</a>
+  <a href="#sc10">S-10: RTP — APP Fraud Response</a>
+  <a href="#sc11">S-11: FedNow — Community Bank Instant Pay</a>
+  <a href="#sc12">S-12: Rail Selection — Operations Decision</a>
+  <div class="nav-section">Reference</div>
+  <a href="scenarios.html" class="active">Scenario Walkthroughs</a>
+</nav>
+
+<main class="main">
+
+  <h1>Scenario Walkthroughs</h1>
+  <p class="topic-meta">
+    <span>Type: Operational Reference</span>
+    <span>Audience: Operations &amp; Compliance Teams</span>
+    <span>Last updated: March 2026</span>
+  </p>
+
+  <p>
+    This section walks through twelve common operational scenarios across all five US payment rails. Each scenario includes the triggering event, step-by-step processing flow, key dates, compliance checkpoints, and the expected resolution. Use these walkthroughs for training, procedure validation, and exception handling reference.
+  </p>
+
+  <!-- ────────────────────────────── S-01 ─────────────────────────────── -->
+  <h2 id="sc1">S-01: Standard ACH Credit — Payroll Direct Deposit</h2>
+  <p><strong>Rail:</strong> ACH &nbsp;|&nbsp; <strong>SEC Code:</strong> PPD &nbsp;|&nbsp; <strong>Type:</strong> Credit</p>
+
+  <h3>Scenario</h3>
+  <p>ABC Corporation runs biweekly payroll for 500 employees. Payroll is processed by their third-party payroll provider and submitted to the ODFI as an ACH PPD Credit batch. Effective Entry Date is Friday.</p>
+
+  <h3>Processing Timeline</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Day</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>Wednesday</td><td>D-2</td><td>Payroll file submitted to ODFI</td><td>ODFI validates NACHA file format, hash totals, Effective Entry Date. File accepted.</td></tr>
+        <tr><td>Wednesday</td><td>D-2</td><td>ODFI transmits to FedACH</td><td>File transmitted in FedACH evening window. FedACH sorts entries by receiving institution.</td></tr>
+        <tr><td>Thursday</td><td>D-1</td><td>RDFI receives entries</td><td>Entries delivered to each employee's RDFI. RDFIs queue entries for Friday posting.</td></tr>
+        <tr><td>Friday</td><td>D (Effective Date)</td><td>Settlement</td><td>Net settlement occurs between ODFI and RDFIs through Federal Reserve accounts. Funds move.</td></tr>
+        <tr><td>Friday</td><td>D</td><td>RDFI posts credits</td><td>Employee account balances updated. Funds available to employees by 9:00 AM (per NACHA rules).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip">
+    <strong>Operations Note</strong>
+    The "2 banking days before Effective Entry Date" rule is NACHA's recommended earliest submission. Some ODFIs allow submission up to 5 days in advance (held in a queue). Confirm your ODFI's holding rules before scheduling recurring payroll files.
+  </div>
+
+  <!-- ────────────────────────────── S-02 ─────────────────────────────── -->
+  <h2 id="sc2">S-02: Same-Day ACH Credit — Urgent Vendor Payment</h2>
+  <p><strong>Rail:</strong> ACH &nbsp;|&nbsp; <strong>SEC Code:</strong> CCD &nbsp;|&nbsp; <strong>Type:</strong> Same-Day Credit</p>
+
+  <h3>Scenario</h3>
+  <p>A corporate treasury team needs to pay a vendor $85,000 today. Standard ACH would settle tomorrow. The payment qualifies for Same-Day ACH (amount under $1M, CCD entry, both banks participate in SDA).</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time (ET)</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>10:00 AM</td><td>Treasury initiates same-day payment</td><td>Payment entered in corporate banking portal. CCD entry flagged for Same-Day ACH.</td></tr>
+        <tr><td>10:20 AM</td><td>ODFI validates and queues</td><td>ODFI confirms: amount ≤ $1M, CCD code eligible, Receiving Bank participates in SDA. Entry held for Window 1 cut-off.</td></tr>
+        <tr><td>10:30 AM</td><td><strong>SDA Window 1 cut-off</strong></td><td>ODFI transmits batch to FedACH before 10:30 AM deadline. Same-Day ACH fee of $0.052 applied.</td></tr>
+        <tr><td>~12:00 PM</td><td>RDFI receives entry</td><td>FedACH delivers entries to RDFI. RDFI queues for posting.</td></tr>
+        <tr><td>1:30 PM</td><td><strong>Funds available at RDFI</strong></td><td>NACHA requires RDFI to make funds available by 1:30 PM for Window 1 entries. Vendor account credited.</td></tr>
+        <tr><td>1:30 PM</td><td>Settlement</td><td>Net settlement between ODFI and RDFI through Federal Reserve accounts.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────── S-03 ─────────────────────────────── -->
+  <h2 id="sc3">S-03: ACH Return — Insufficient Funds (R01)</h2>
+  <p><strong>Rail:</strong> ACH &nbsp;|&nbsp; <strong>Return Code:</strong> R01 &nbsp;|&nbsp; <strong>Type:</strong> Debit Return</p>
+
+  <h3>Scenario</h3>
+  <p>A consumer has a monthly recurring debit authorization (PPD) for a gym membership of $49.99. On the debit date, the consumer's account has insufficient funds. The RDFI initiates an R01 return.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>D</td><td>Originator submits PPD debit</td><td>Gym's billing system submits debit file to ODFI. ODFI transmits to ACH Operator.</td></tr>
+        <tr><td>D+1</td><td>RDFI posts debit — NSF detected</td><td>RDFI attempts to post $49.99 debit. Account balance is $12.33 — insufficient. RDFI initiates R01 return.</td></tr>
+        <tr><td>D+2</td><td>R01 return sent to ODFI</td><td>RDFI must return within 2 banking days of settlement. Return transmitted to ACH Operator, routed to ODFI.</td></tr>
+        <tr><td>D+2/D+3</td><td>ODFI notifies Originator</td><td>ODFI posts R01 return credit to Originator's account and notifies the gym's billing system.</td></tr>
+        <tr><td>Within 180 days</td><td>Originator re-presents</td><td>Originator may re-present the entry up to 2 more times within 180 days of the original return. Must use new effective date.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="warning">
+    <strong>Return Rate Monitoring</strong>
+    If this Originator's R01 return rate for consumer PPD debits exceeds 3.0% in the prior 60 days, the ODFI must take action — which may include suspending the Originator's ACH origination access. Monitor return rates daily.
+  </div>
+
+  <!-- ────────────────────────────── S-04 ─────────────────────────────── -->
+  <h2 id="sc4">S-04: ACH Unauthorized Debit Dispute (R10)</h2>
+  <p><strong>Rail:</strong> ACH &nbsp;|&nbsp; <strong>Return Code:</strong> R10 &nbsp;|&nbsp; <strong>Type:</strong> Consumer Dispute</p>
+
+  <h3>Scenario</h3>
+  <p>A consumer contacts their bank (RDFI) 15 days after their monthly statement, claiming they never authorized a $120 debit from a subscription service.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>D</td><td>Original debit posted</td><td>PPD debit of $120 posted to consumer account.</td></tr>
+        <tr><td>D+45</td><td>Consumer files dispute</td><td>Consumer calls bank. Claims no authorization was given. Bank opens investigation per Regulation E.</td></tr>
+        <tr><td>D+45 to D+55</td><td>Bank investigates</td><td>Bank contacts Originator via ODFI to request proof of authorization (written authorization or recorded consent).</td></tr>
+        <tr><td>D+55</td><td>Provisional credit issued</td><td>Regulation E: Bank must provide provisional credit within 10 business days of receiving the dispute. $120 credited to consumer account.</td></tr>
+        <tr><td>D+60</td><td>R10 return initiated</td><td>Originator cannot produce authorization evidence within NACHA timeframe. RDFI initiates R10 return to ODFI. ODFI debits Originator's account.</td></tr>
+        <tr><td>D+60+</td><td>Provisional credit confirmed</td><td>Consumer keeps the $120 credit. Investigation closed. ODFI may initiate NACHA compliance process against Originator.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────── S-05 ─────────────────────────────── -->
+  <h2 id="sc5">S-05: Fedwire — Large-Value Corporate Settlement</h2>
+  <p><strong>Rail:</strong> Fedwire &nbsp;|&nbsp; <strong>Message:</strong> pacs.008 (ISO 20022)</p>
+
+  <h3>Scenario</h3>
+  <p>A corporate client is closing a real estate acquisition at 2:00 PM ET today. The closing requires $4.2 million wired to the title company's account at another bank by 3:00 PM ET.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time (ET)</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>1:15 PM</td><td>Wire request received</td><td>Corporate banking receives wire instruction. Ops team initiates processing. OFAC screening runs — no match.</td></tr>
+        <tr><td>1:20 PM</td><td>Compliance clearance</td><td>$4.2M wire triggers secondary review per BSA threshold. Compliance confirms: legitimate acquisition, documentation on file. Approved.</td></tr>
+        <tr><td>1:25 PM</td><td>pacs.008 message constructed</td><td>Payment hub generates ISO 20022 pacs.008 with UETR, beneficiary details, purpose code CORT (trade settlement).</td></tr>
+        <tr><td>1:30 PM</td><td>Submitted to Fedwire</td><td>Message sent via FedLine to Fedwire Funds Service. Federal Reserve validates and processes.</td></tr>
+        <tr><td>1:30 PM</td><td><strong>RTGS Settlement</strong></td><td>Fedwire debits Sending Bank's Fed account $4.2M. Credits Receiving Bank (title company's bank) Fed account $4.2M. <strong>Irrevocable.</strong></td></tr>
+        <tr><td>1:32 PM</td><td>Receiving Bank posts credit</td><td>Title company's bank receives Fedwire credit notification (pacs.008). Posts $4.2M to title company's account. Closing proceeds.</td></tr>
+        <tr><td>1:35 PM</td><td>Confirmation issued</td><td>Sending Bank generates wire confirmation to corporate client with UETR reference. Confirmation logged in core system.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────── S-06 ─────────────────────────────── -->
+  <h2 id="sc6">S-06: Fedwire Error — Wrong Beneficiary Account</h2>
+  <p><strong>Rail:</strong> Fedwire &nbsp;|&nbsp; <strong>Type:</strong> Wire Recall</p>
+
+  <h3>Scenario</h3>
+  <p>An operations analyst transposes two digits in the beneficiary account number for a $500,000 wire. The wire settles to an unintended account. The error is discovered 20 minutes after settlement.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>T+0 (2:00 PM)</td><td>Wire settles — incorrect account</td><td>Fedwire settles $500K to wrong account. Settlement is final and irrevocable.</td></tr>
+        <tr><td>T+20 min</td><td>Error discovered</td><td>Operations analyst identifies transposition error on post-send review. Escalates to Operations Supervisor immediately.</td></tr>
+        <tr><td>T+25 min</td><td>UETR identified</td><td>Ops team retrieves UETR from Fedwire outgoing log. This is the primary reference for all recall communications.</td></tr>
+        <tr><td>T+30 min</td><td>Receiving Bank contacted</td><td>Ops Supervisor calls Receiving Bank's Wire Operations desk directly. Provides: UETR, amount, value date, error description. Requests immediate hold on beneficiary account.</td></tr>
+        <tr><td>T+45 min</td><td>Written recall request sent</td><td>Formal recall request (camt.056 if SWIFT member; written email if not) sent with UETR and "TECH - technical error" reason code.</td></tr>
+        <tr><td>T+1 business day</td><td>Receiving Bank responds</td><td><strong>Scenario A:</strong> Funds still in account — Receiving Bank agrees to return. Wire back sent for $500K. Issue resolved.<br><strong>Scenario B:</strong> Account holder has withdrawn funds — Receiving Bank cannot return. Escalate to Legal.</td></tr>
+        <tr><td>T+1 business day</td><td>Incident report filed</td><td>Ops Manager files internal incident report. Compliance reviews for SAR requirement if funds are not recovered.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────── S-07 ─────────────────────────────── -->
+  <h2 id="sc7">S-07: SWIFT — Cross-Border USD to EUR Payment</h2>
+  <p><strong>Rail:</strong> SWIFT &nbsp;|&nbsp; <strong>Message:</strong> MT 103 (MX migration pending)</p>
+
+  <h3>Scenario</h3>
+  <p>A US importer pays a German supplier EUR 250,000 (equivalent USD). The payment must reach the supplier's account at Deutsche Bank Frankfurt by Wednesday value date.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date / Time</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>Monday 9:00 AM ET</td><td>Wire instruction received</td><td>Customer submits SWIFT wire request: Deutsche Bank BIC, beneficiary IBAN, EUR 250,000 equivalent, value date Wednesday.</td></tr>
+        <tr><td>Monday 9:15 AM</td><td>OFAC &amp; Sanctions screening</td><td>All parties screened: customer, beneficiary (German entity), Deutsche Bank. No matches. Approved.</td></tr>
+        <tr><td>Monday 9:20 AM</td><td>FX conversion</td><td>USD amount calculated based on spot EUR/USD rate. USD debited from customer account. EUR nostro position checked.</td></tr>
+        <tr><td>Monday 9:30 AM</td><td>MT 103 transmitted</td><td>MT 103 message sent via SWIFT to US correspondent of Deutsche Bank. UETR assigned. gpi Tracker updated: ACSP.</td></tr>
+        <tr><td>Monday afternoon</td><td>Correspondent processes</td><td>US correspondent bank receives MT 103, performs own OFAC screening, forwards to Deutsche Bank Frankfurt via internal network or SWIFT.</td></tr>
+        <tr><td>Tuesday morning (CET)</td><td>Deutsche Bank receives</td><td>Deutsche Bank receives payment instruction. Processes it against EUR accounts. Value date set to Wednesday.</td></tr>
+        <tr><td>Wednesday</td><td>Value date — funds credited</td><td>Deutsche Bank credits German supplier's account on Wednesday value date. gpi Tracker updated: ACCC. Confirmation sent back to originating bank.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────── S-08 ─────────────────────────────── -->
+  <h2 id="sc8">S-08: SWIFT Recall — gSRP Process</h2>
+  <p><strong>Rail:</strong> SWIFT &nbsp;|&nbsp; <strong>Type:</strong> Cross-Border Payment Recall</p>
+
+  <h3>Scenario</h3>
+  <p>A business customer discovers that $180,000 was sent to the wrong beneficiary bank — the SWIFT BIC entered was for a bank in Singapore instead of Malaysia. The payment was sent this morning.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>T+0</td><td>Error identified</td><td>Customer calls bank. Operations validates error: wrong BIC. UETR retrieved from SWIFT gpi Tracker.</td></tr>
+        <tr><td>T+1 hour</td><td>gpi Tracker status checked</td><td>Status shows ACSP — payment still in processing chain. Funds not yet credited to final beneficiary.</td></tr>
+        <tr><td>T+1.5 hours</td><td>camt.056 recall submitted</td><td>Operations submits Payment Cancellation Request (camt.056) via SWIFT Tracker gSRP with reason CUST (customer request). All banks in chain notified.</td></tr>
+        <tr><td>T+4 hours</td><td>Singapore bank responds</td><td>Singapore bank (wrong destination) sends camt.029 — confirms payment has not been credited. Will return the funds. Status: PDNG.</td></tr>
+        <tr><td>Next business day</td><td>Funds returned</td><td>Singapore bank sends SWIFT return. Funds received back into nostro account. Customer account re-credited. gpi Tracker: resolved.</td></tr>
+        <tr><td>Next business day</td><td>Correct payment re-sent</td><td>Operations initiates new MT 103 to correct Malaysian bank BIC. Customer notified of resolution.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────── S-09 ─────────────────────────────── -->
+  <h2 id="sc9">S-09: RTP — Instant Consumer Payment</h2>
+  <p><strong>Rail:</strong> RTP &nbsp;|&nbsp; <strong>Type:</strong> Credit Push</p>
+
+  <h3>Scenario</h3>
+  <p>A small business owner needs to pay a freelancer $3,500 at 8:00 PM on a Saturday. ACH would not post until Monday. Fedwire is closed. The business uses RTP.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>8:00 PM Sat</td><td>Business initiates RTP payment</td><td>Enters amount $3,500, freelancer's account number and routing number (confirmed RTP participant). Payment submitted.</td></tr>
+        <tr><td>8:00:02 PM</td><td>OFAC screening</td><td>Automated OFAC screening — no match. Continues.</td></tr>
+        <tr><td>8:00:04 PM</td><td>Submitted to TCH RTP</td><td>pacs.008 message sent to TCH RTP system. TCH validates and routes to Receiving Bank.</td></tr>
+        <tr><td>8:00:06 PM</td><td>Receiving Bank accepts</td><td>Freelancer's bank validates account — open and valid. Accepts payment. Credits $3,500 to freelancer's account.</td></tr>
+        <tr><td>8:00:07 PM</td><td>TCH Settlement</td><td>TCH debits Business's bank prefunded position. Credits Freelancer's bank. Settlement final and irrevocable.</td></tr>
+        <tr><td>8:00:08 PM</td><td>Confirmations sent</td><td>Business receives "Payment Sent" confirmation. Freelancer receives "Payment Received" push notification from their bank. Total elapsed: ~8 seconds.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────── S-10 ─────────────────────────────── -->
+  <h2 id="sc10">S-10: RTP — Authorized Push Payment Fraud Response</h2>
+  <p><strong>Rail:</strong> RTP &nbsp;|&nbsp; <strong>Type:</strong> Fraud / No Reversal Available</p>
+
+  <h3>Scenario</h3>
+  <p>A consumer was deceived by a scammer posing as their bank's fraud department. They were convinced to authorize a $12,000 RTP payment to "secure their account." They realize the fraud 30 minutes later and contact their bank.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>T+0</td><td>RTP payment sent by consumer</td><td>Consumer authorized the payment — it was not unauthorized. RTP is irrevocable. No reversal mechanism exists.</td></tr>
+        <tr><td>T+30 min</td><td>Consumer reports fraud</td><td>Consumer contacts bank. Bank opens fraud investigation. Important: this is APP (Authorized Push Payment) fraud, not an unauthorized transaction — Regulation E protections do not automatically apply.</td></tr>
+        <tr><td>T+1 hour</td><td>Bank contacts Receiving Bank</td><td>Bank calls Receiving Bank's fraud operations team urgently. Requests voluntary freeze of beneficiary account and return of funds.</td></tr>
+        <tr><td>T+2 hours</td><td>Receiving Bank responds</td><td><strong>Best case:</strong> Beneficiary account is a mule account. Receiving Bank freezes it voluntarily and returns funds. <strong>Worst case:</strong> Funds already moved out (second hop). Recovery unlikely.</td></tr>
+        <tr><td>T+1 day</td><td>SAR filing evaluated</td><td>Bank's BSA/AML team evaluates SAR requirement. If scammer pattern identified across multiple customers, file SAR with FinCEN.</td></tr>
+        <tr><td>Ongoing</td><td>Process improvement</td><td>Bank reviews its RTP fraud controls: Were appropriate friction points in place for $12,000 first-time beneficiary? Were behavioral analytics triggered? Review for control gaps.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────── S-11 ─────────────────────────────── -->
+  <h2 id="sc11">S-11: FedNow — Community Bank Instant Payment</h2>
+  <p><strong>Rail:</strong> FedNow &nbsp;|&nbsp; <strong>Type:</strong> Credit Push via Correspondent</p>
+
+  <h3>Scenario</h3>
+  <p>A small community bank (not a direct FedNow participant) uses its core banking vendor's FedNow connection to process an instant payment for a business customer.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Event</th><th>Action / Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>10:30 AM</td><td>Business customer initiates</td><td>Customer submits $8,500 payment to supplier via community bank's mobile banking app. Bank confirms supplier's bank participates in FedNow.</td></tr>
+        <tr><td>10:30:03 AM</td><td>Core banking vendor processes</td><td>Community bank's core banking system (via FedNow-certified vendor) generates pacs.008. Submits via vendor's FedLine connection to FedNow.</td></tr>
+        <tr><td>10:30:04 AM</td><td>FedNow routes to Receiving Bank</td><td>FedNow receives message. Validates format and routes to supplier's bank (direct FedNow participant).</td></tr>
+        <tr><td>10:30:05 AM</td><td>Settlement</td><td>FedNow debits community bank's settlement account (held at vendor/correspondent). Credits supplier bank's Fed master account. Settlement immediate and final.</td></tr>
+        <tr><td>10:30:06 AM</td><td>Supplier account credited</td><td>Supplier's bank posts $8,500 to supplier account. Notification sent to supplier. Total time: ~3 seconds.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────── S-12 ─────────────────────────────── -->
+  <h2 id="sc12">S-12: Rail Selection Decision — Operations Reference</h2>
+  <p><strong>Type:</strong> Decision Support</p>
+
+  <h3>When to Use Which Rail</h3>
+  <p>Operations staff frequently need to advise customers or make routing decisions. This table provides the key criteria for rail selection.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Payment Need</th><th>Recommended Rail</th><th>Key Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Domestic payroll, 500+ employees, settled next day</td>
+          <td><a href="ach.html">ACH</a> (PPD Credit, standard)</td>
+          <td>Lowest cost, NACHA-compliant, appropriate timeline</td>
+        </tr>
+        <tr>
+          <td>Domestic payroll, urgent correction needed today</td>
+          <td><a href="ach.html">Same-Day ACH</a> (PPD, Window 1 or 2)</td>
+          <td>Same-day settlement, low cost vs. wire</td>
+        </tr>
+        <tr>
+          <td>Real estate closing, $4.5M, needs to settle by 3 PM today</td>
+          <td><a href="fedwire.html">Fedwire</a></td>
+          <td>High-value, time-critical, same-day finality, irrevocable</td>
+        </tr>
+        <tr>
+          <td>International payment to German supplier, EUR, T+2</td>
+          <td><a href="swift.html">SWIFT</a> (MT 103 / pacs.008)</td>
+          <td>Only cross-border rail; SWIFT gpi for tracking</td>
+        </tr>
+        <tr>
+          <td>Consumer P2P payment on a Sunday night</td>
+          <td><a href="rtp.html">RTP</a> or <a href="fednow.html">FedNow</a></td>
+          <td>Instant, 24/7/365, ACH/Fedwire not available or too slow</td>
+        </tr>
+        <tr>
+          <td>Instant payment to a small credit union customer</td>
+          <td><a href="fednow.html">FedNow</a></td>
+          <td>Broader community bank / credit union reach than RTP currently</td>
+        </tr>
+        <tr>
+          <td>Small consumer bill payment, non-urgent</td>
+          <td><a href="ach.html">ACH</a> (PPD or WEB Debit)</td>
+          <td>Lowest cost, appropriate for recurring non-urgent consumer debits</td>
+        </tr>
+        <tr>
+          <td>$2M B2B urgent domestic payment, 4:00 PM</td>
+          <td><a href="fedwire.html">Fedwire</a> (check Fedwire cut-off); <a href="rtp.html">RTP</a> if ≤$1M</td>
+          <td>Fedwire for over $1M and time-critical; RTP if amount qualifies and Fedwire window has passed</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="doc-nav">
+    <a href="card.html">← Back to Card Networks</a>
+    <a href="index.html">Back to Overview</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span>US Payments Hub · Scenario Walkthroughs · v1.0 · March 2026</span>
+  <span>Internal Use Only</span>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fedwire Funds Transfer — US Payments Hub</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <a class="header-brand" href="index.html">US Payments Hub <span>· Operations Reference</span></a>
+  <div class="header-breadcrumb">
+    <a href="index.html">Home</a> › Fedwire
+  </div>
+  <span class="header-rail-badge">Fedwire</span>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-section">Overview</div>
+  <a href="index.html">Introduction</a>
+  <a href="index.html#rail-comparison">Rail Comparison</a>
+  <a href="index.html#regulatory">Regulatory Framework</a>
+
+  <div class="nav-section">Payment Rails</div>
+  <a href="ach.html">ACH — Automated Clearing House</a>
+  <a href="fedwire.html" class="active">Fedwire — RTGS Wire Transfer</a>
+  <a href="swift.html">SWIFT — Cross-Border Payments</a>
+  <a href="rtp.html">RTP — Real-Time Payments</a>
+  <a href="fednow.html">FedNow — Federal Reserve</a>
+  <a href="card.html">Card Network Processing</a>
+
+  <div class="nav-section">On This Page</div>
+  <a href="#overview">Overview</a>
+  <a href="#iso20022">ISO 20022 Migration</a>
+  <a href="#participants">Key Participants</a>
+  <a href="#processing-flow">Processing Flow</a>
+  <a href="#operating-hours">Operating Hours</a>
+  <a href="#message-format">Message Format</a>
+  <a href="#settlement">Settlement &amp; Finality</a>
+  <a href="#compliance">Compliance Requirements</a>
+  <a href="#exceptions">Exceptions &amp; Recalls</a>
+  <a href="#reconciliation">Reconciliation</a>
+
+  <div class="nav-section">Reference</div>
+  <a href="scenarios.html">Scenario Walkthroughs</a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <h1>Fedwire Funds Transfer</h1>
+  <p class="topic-meta">
+    <span>Rail: Fedwire</span>
+    <span>Operator: Federal Reserve Banks</span>
+    <span>Standard: ISO 20022 (since March 10, 2025)</span>
+    <span>Last updated: March 2026</span>
+  </p>
+
+  <!-- OVERVIEW -->
+  <h2 id="overview">Overview</h2>
+  <p>
+    Fedwire Funds Service is the Federal Reserve's real-time gross settlement (RTGS) system for high-value, time-critical US dollar transfers. Unlike ACH batch processing, Fedwire settles each transaction individually and immediately — there is no netting. Once a Fedwire payment is settled, it is irrevocable and final.
+  </p>
+  <p>
+    Fedwire is the primary rail for: large interbank transfers, government securities settlements, corporate acquisitions and real estate closings, time-sensitive business payments, and same-day settlement of Fed obligations. The system processes over <strong>$4 trillion in daily transaction volume</strong>.
+  </p>
+
+  <div class="note">
+    <strong>RTGS vs. Batch</strong>
+    Fedwire settles gross (one by one, immediately) vs. ACH's net batch settlement. This means there is no deferred settlement risk — the RDFI's Federal Reserve account is credited the moment the transaction is processed. This is why Fedwire is preferred for large, time-critical payments.
+  </div>
+
+  <!-- ISO 20022 MIGRATION -->
+  <h2 id="iso20022">ISO 20022 Migration — Effective March 10, 2025</h2>
+  <p>
+    The Federal Reserve completed the Fedwire ISO 20022 migration on <strong>March 10, 2025</strong>. The legacy Fedwire proprietary message format (fixed-width, tag-based) was replaced by the ISO 20022 <code>pacs.008</code> (Customer Credit Transfer) and <code>pacs.009</code> (Financial Institution Credit Transfer) message formats.
+  </p>
+
+  <div class="important">
+    <strong>Legacy Format Retired</strong>
+    The Fedwire legacy format is no longer accepted as of March 10, 2025. All Fedwire messages must use ISO 20022 XML. If your core banking system or payment hub has not been upgraded, outgoing Fedwire transactions will fail. Contact your technology team immediately if your system still generates legacy-format Fedwire messages.
+  </div>
+
+  <h3>Key Changes in the ISO 20022 Fedwire Format</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Element</th><th>Legacy Format</th><th>ISO 20022 (Current)</th></tr></thead>
+      <tbody>
+        <tr><td>Format type</td><td>Fixed-width, tag-based (e.g., {1000}, {2000})</td><td>XML — pacs.008 / pacs.009</td></tr>
+        <tr><td>Remittance data</td><td>Limited — 140 characters max</td><td>Structured and unstructured — up to 9,000 characters</td></tr>
+        <tr><td>Name/address fields</td><td>Abbreviated, unstructured</td><td>Structured — separate Name, Street, City, Country fields</td></tr>
+        <tr><td>End-to-end reference</td><td>IMAD (Input Message Accountability Data)</td><td>End-to-end ID (EndToEndId) + UETR (Unique End-to-end Transaction Reference)</td></tr>
+        <tr><td>LEI support</td><td>Not supported</td><td>Legal Entity Identifier (LEI) supported in party fields</td></tr>
+        <tr><td>Purpose of payment</td><td>Not supported</td><td>Purpose code supported (e.g., CORT, TREA, SALA)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- KEY PARTICIPANTS -->
+  <h2 id="participants">Key Participants</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Participant</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Sending Bank (ODFI equivalent)</strong></td>
+          <td>The financial institution initiating the Fedwire transfer on behalf of its customer. Must hold a Federal Reserve master account or use a correspondent bank that does.</td>
+        </tr>
+        <tr>
+          <td><strong>Fedwire Funds Service</strong></td>
+          <td>Federal Reserve Banks. Routes and settles the transfer gross, in real time, between the sending and receiving bank's Fed accounts.</td>
+        </tr>
+        <tr>
+          <td><strong>Receiving Bank</strong></td>
+          <td>The financial institution receiving the funds. Settlement occurs in their Federal Reserve master account upon receipt.</td>
+        </tr>
+        <tr>
+          <td><strong>Beneficiary</strong></td>
+          <td>The customer or entity whose account will be credited. The Receiving Bank posts funds to the beneficiary account upon receipt of the Fedwire settlement.</td>
+        </tr>
+        <tr>
+          <td><strong>Intermediary Bank</strong></td>
+          <td>Optional. A correspondent bank used when the Receiving Bank does not have a direct Federal Reserve master account. The intermediary receives funds on Fedwire and then forwards via internal transfer or separate wire.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PROCESSING FLOW -->
+  <h2 id="processing-flow">Processing Flow</h2>
+
+  <div class="flow-diagram">
+    <div class="flow-box">Customer<br>Initiates Wire</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Sending Bank<br>Validates &amp; Queues</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Fedwire<br>Processes (RTGS)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Receiving Bank<br>Receives Notification</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Beneficiary<br>Account Credited</div>
+  </div>
+
+  <ol class="step-list">
+    <li><strong>Customer Wire Request:</strong> The originating customer submits a wire request — in person, via online banking portal, or through a system-to-system API connection — specifying the beneficiary name, account number, receiving bank routing/ABA number, amount, and remittance information.</li>
+    <li><strong>Compliance Screening (Sending Bank):</strong> Before submission to Fedwire, the Sending Bank must perform OFAC SDN screening on the wire instruction. A sanctions match triggers a hold and escalation to Compliance. No wire may be submitted to Fedwire with an unresolved OFAC match.</li>
+    <li><strong>Message Construction:</strong> The Sending Bank's payment hub constructs the ISO 20022 <code>pacs.008</code> XML message, populated with the required fields: instructed amount, ordering customer, creditor account, creditor agent (ABA routing number), purpose code, and end-to-end reference (UETR).</li>
+    <li><strong>Submission to Fedwire:</strong> The message is submitted to the Fedwire Funds Service via the Fed's secure connection (FedLine network). The system validates the message format and the Sending Bank's available funds in its Federal Reserve account.</li>
+    <li><strong>RTGS Settlement:</strong> Fedwire immediately debits the Sending Bank's Federal Reserve account and credits the Receiving Bank's Federal Reserve account. Settlement is immediate and final — no reversals after this point.</li>
+    <li><strong>Receiving Bank Notification:</strong> The Receiving Bank receives the incoming Fedwire credit notification (pacs.008) via FedLine. The bank's core system posts the funds to the beneficiary's account, typically within minutes of receipt.</li>
+  </ol>
+
+  <!-- OPERATING HOURS -->
+  <h2 id="operating-hours">Operating Hours</h2>
+  <p>Fedwire operates on a schedule defined by the Federal Reserve. Understanding the operating window and cut-off times is critical for same-day settlement commitments.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Day</th><th>Service Window</th><th>Customer Cut-Off (typical)</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Monday – Friday</td>
+          <td>9:00 PM (prior day) ET – 6:30 PM ET</td>
+          <td>Customer cut-off: 5:00–5:30 PM ET (institution-defined)</td>
+          <td>Operating window spans approximately 21.5 hours. Many banks close customer wire acceptance by 5:00 PM ET.</td>
+        </tr>
+        <tr>
+          <td>Saturday</td>
+          <td>Not available</td>
+          <td>—</td>
+          <td>Fedwire does not operate on Saturdays</td>
+        </tr>
+        <tr>
+          <td>Sunday</td>
+          <td>Not available</td>
+          <td>—</td>
+          <td>Fedwire does not operate on Sundays</td>
+        </tr>
+        <tr>
+          <td>Federal Reserve holidays</td>
+          <td>Not available</td>
+          <td>—</td>
+          <td>Fedwire is closed on all Federal Reserve Bank holidays. Same-day wires received after cut-off on the prior business day will be processed next business day.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="warning">
+    <strong>Liquidity Management</strong>
+    Banks with insufficient balances in their Federal Reserve master account will have Fedwire messages queued. Queued messages are released when sufficient funds become available — either through incoming Fedwire credits or daylight overdraft facilities. Daylight overdrafts are subject to Fed collateral requirements and cap limits. Monitor intraday liquidity positions carefully to avoid end-of-day overdrafts.
+  </div>
+
+  <!-- MESSAGE FORMAT -->
+  <h2 id="message-format">ISO 20022 Message Format Overview</h2>
+  <p>Fedwire uses two primary ISO 20022 message types. Operations and technology teams must understand the structure for format validation and exception diagnosis.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Message Type</th><th>ISO 20022 Code</th><th>Use Case</th></tr></thead>
+      <tbody>
+        <tr><td>Customer Credit Transfer</td><td><code>pacs.008.001.08</code></td><td>Payment from a non-bank customer (individual or corporate) to a beneficiary. Most common Fedwire message type.</td></tr>
+        <tr><td>Financial Institution Credit Transfer</td><td><code>pacs.009.001.08</code></td><td>Bank-to-bank transfer with no end customer. Used for interbank settlements, nostro funding, treasury operations.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Key Fields in pacs.008 (Fedwire)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Field</th><th>ISO 20022 Element</th><th>Description</th><th>Required?</th></tr></thead>
+      <tbody>
+        <tr><td>Message ID</td><td><code>MsgId</code></td><td>Unique ID assigned by the Sending Bank. Used for duplicate detection.</td><td>Mandatory</td></tr>
+        <tr><td>End-to-End ID</td><td><code>EndToEndId</code></td><td>Reference passed through the full payment chain — from Originator to final beneficiary.</td><td>Mandatory</td></tr>
+        <tr><td>UETR</td><td><code>UETR</code></td><td>Universally unique end-to-end transaction reference (UUID format). Enables SWIFT gpi-style tracking for cross-border interoperability.</td><td>Mandatory</td></tr>
+        <tr><td>Instructed Amount</td><td><code>IntrBkSttlmAmt</code></td><td>The interbank settlement amount in USD. Cannot be zero.</td><td>Mandatory</td></tr>
+        <tr><td>Creditor Agent (ABA)</td><td><code>CdtrAgt / FinInstnId / ClrSysMmbId</code></td><td>9-digit ABA routing number of the Receiving Bank. Must be a valid FedACH/Fedwire participant.</td><td>Mandatory</td></tr>
+        <tr><td>Creditor Name</td><td><code>Cdtr / Nm</code></td><td>Beneficiary name. Structured name and address fields available.</td><td>Mandatory</td></tr>
+        <tr><td>Creditor Account</td><td><code>CdtrAcct / Id</code></td><td>Beneficiary account number at the Receiving Bank.</td><td>Mandatory</td></tr>
+        <tr><td>Remittance Info</td><td><code>RmtInf</code></td><td>Structured or unstructured remittance data. ISO 20022 allows significantly more remittance detail than legacy format.</td><td>Optional</td></tr>
+        <tr><td>Purpose Code</td><td><code>Purp / Cd</code></td><td>ISO 20022 purpose code (e.g., CORT = trade settlement, TREA = treasury, SALA = salary).</td><td>Optional (recommended)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SETTLEMENT -->
+  <h2 id="settlement">Settlement and Finality</h2>
+  <p>
+    Fedwire settlement is real-time, gross, and final. Once the Federal Reserve processes a Fedwire payment and credits the Receiving Bank's account, the settlement is irrevocable. The Receiving Bank can post funds to the beneficiary immediately upon receipt.
+  </p>
+
+  <div class="important">
+    <strong>No Reversals After Settlement</strong>
+    Unlike ACH, there is no return mechanism in Fedwire once settlement occurs. If funds are sent in error (wrong beneficiary, wrong amount), recovery requires the cooperation of the Receiving Bank and, ultimately, the beneficiary. Initiate a wire recall request immediately. There is no guaranteed recovery.
+  </div>
+
+  <!-- COMPLIANCE -->
+  <h2 id="compliance">Compliance Requirements</h2>
+
+  <h3>OFAC Screening — Mandatory Pre-Submission</h3>
+  <ul>
+    <li>All Fedwire outgoing instructions must be screened against the OFAC SDN List before submission.</li>
+    <li>Screen all parties: ordering customer, beneficiary, intermediary banks, and any referenced third parties in remittance fields.</li>
+    <li>A confirmed OFAC match must result in immediate hold and escalation to Compliance. Do not release the wire.</li>
+  </ul>
+
+  <h3>Regulation J (12 CFR Part 210)</h3>
+  <ul>
+    <li>Regulation J governs the use of Fedwire by depository institutions and establishes the rights and responsibilities of Sending and Receiving Banks.</li>
+    <li>Receiving Banks are responsible for posting funds to beneficiary accounts in accordance with the payment instructions received on the Fedwire credit notification.</li>
+    <li>Sending Banks warrant that the payment instruction is legitimate and that the originating customer has authorized the transfer.</li>
+  </ul>
+
+  <h3>BSA / Travel Rule (31 CFR 103.33)</h3>
+  <ul>
+    <li>For wire transfers of $3,000 or more: Sending Banks must collect and retain originator information (name, address, account number) and beneficiary information.</li>
+    <li>This information must be passed to any intermediary banks and to the Receiving Bank in the payment instruction.</li>
+    <li>ISO 20022 structured fields facilitate full Travel Rule compliance. Ensure that originator name, address, and account fields are populated for all qualifying wires.</li>
+  </ul>
+
+  <!-- EXCEPTIONS -->
+  <h2 id="exceptions">Exceptions and Wire Recalls</h2>
+
+  <h3>When to Initiate a Wire Recall</h3>
+  <ul>
+    <li>Payment sent to incorrect beneficiary account</li>
+    <li>Duplicate wire transmission</li>
+    <li>Incorrect amount sent</li>
+    <li>Payment instruction sent in error (customer cancellation request within minutes of submission)</li>
+  </ul>
+
+  <h3>Wire Recall Procedure</h3>
+  <ol class="step-list">
+    <li>Identify the UETR (Unique End-to-end Transaction Reference) from the original Fedwire message. This is the primary identifier used in recall communications.</li>
+    <li>Contact the Receiving Bank's wire operations department immediately by phone and in writing. Provide: UETR, original date/time of wire, amount, and sender/beneficiary details.</li>
+    <li>Submit a formal written recall request via SWIFT gSRP (global Stop and Recall Payments) if the Receiving Bank is a SWIFT participant. For domestic-only institutions, use Fed funds transfer callback procedures.</li>
+    <li>The Receiving Bank is not legally obligated to return funds if they have been posted to the beneficiary and the beneficiary has used or withdrawn them. Recovery is voluntary cooperation.</li>
+    <li>Document all communications and escalate to the Operations Manager and Legal team if the Receiving Bank does not respond within 24 hours.</li>
+    <li>File a SAR if there is reason to believe the erroneous wire may be associated with fraud.</li>
+  </ol>
+
+  <!-- RECONCILIATION -->
+  <h2 id="reconciliation">Reconciliation Procedures</h2>
+
+  <h3>Intraday Reconciliation</h3>
+  <p>
+    Fedwire activity must be monitored throughout the business day, not just at end of day. Operations teams should reconcile outgoing and incoming Fedwire transactions against the institution's Federal Reserve account statement (available in real time via FedLine).
+  </p>
+
+  <ol class="step-list">
+    <li>Obtain the real-time Federal Reserve account statement via FedLine Advantage at minimum three times daily: morning, midday, and prior to cut-off.</li>
+    <li>Match each outgoing Fedwire debit against the corresponding customer wire request in the payment queue (reference: UETR).</li>
+    <li>Match each incoming Fedwire credit against the core banking system posting (UETR, amount, beneficiary account).</li>
+    <li>Investigate any unmatched items immediately — do not carry forward to next-day reconciliation without resolution.</li>
+    <li>Confirm that end-of-day Federal Reserve account position matches the institution's expected net Fedwire position.</li>
+    <li>Archive the daily Fedwire settlement statement and reconciliation worksheet per records retention policy.</li>
+  </ol>
+
+  <div class="doc-nav">
+    <a href="ach.html">← Back to ACH</a>
+    <a href="swift.html">Next: SWIFT →</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span>US Payments Hub · Fedwire · v1.0 · March 2026</span>
+  <span>Internal Use Only</span>
+</footer>
+
+</body>
+</html>

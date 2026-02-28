@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACH Processing — US Payments Hub</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <a class="header-brand" href="index.html">US Payments Hub <span>· Operations Reference</span></a>
+  <div class="header-breadcrumb">
+    <a href="index.html">Home</a> › ACH Processing
+  </div>
+  <span class="header-rail-badge">ACH</span>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-section">Overview</div>
+  <a href="index.html">Introduction</a>
+  <a href="index.html#rail-comparison">Rail Comparison</a>
+  <a href="index.html#regulatory">Regulatory Framework</a>
+
+  <div class="nav-section">Payment Rails</div>
+  <a href="ach.html" class="active">ACH — Automated Clearing House</a>
+  <a href="fedwire.html">Fedwire — RTGS Wire Transfer</a>
+  <a href="swift.html">SWIFT — Cross-Border Payments</a>
+  <a href="rtp.html">RTP — Real-Time Payments</a>
+  <a href="fednow.html">FedNow — Federal Reserve</a>
+  <a href="card.html">Card Network Processing</a>
+
+  <div class="nav-section">On This Page</div>
+  <a href="#overview">Overview</a>
+  <a href="#participants">Key Participants</a>
+  <a href="#sec-codes">SEC Codes</a>
+  <a href="#processing-flow">Processing Flow</a>
+  <a href="#settlement">Settlement Timeline</a>
+  <a href="#same-day">Same-Day ACH</a>
+  <a href="#returns">Return Codes &amp; Handling</a>
+  <a href="#compliance">Compliance Requirements</a>
+  <a href="#exceptions">Exception Handling</a>
+  <a href="#reconciliation">Reconciliation</a>
+
+  <div class="nav-section">Reference</div>
+  <a href="scenarios.html">Scenario Walkthroughs</a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <h1>ACH — Automated Clearing House</h1>
+  <p class="topic-meta">
+    <span>Rail: ACH</span>
+    <span>Operator: NACHA / Federal Reserve ACH / EPN</span>
+    <span>Last updated: March 2026</span>
+  </p>
+
+  <!-- OVERVIEW -->
+  <h2 id="overview">Overview</h2>
+  <p>
+    The Automated Clearing House (ACH) Network is a batch-based electronic payment system that facilitates the movement of money between US financial institutions. Governed by the NACHA Operating Rules, ACH processes over 30 billion transactions annually and is the backbone of payroll direct deposit, consumer bill payment, business-to-business transfers, government disbursements, and tax payments.
+  </p>
+  <p>
+    ACH transactions are grouped into batches, transmitted in NACHA-formatted files, and settled through either the Federal Reserve's FedACH service or The Clearing House's Electronic Payments Network (EPN). Unlike wire transfers, ACH transactions are not immediately final — returns and reversals are permitted under defined timeframes.
+  </p>
+
+  <div class="note">
+    <strong>Key Distinction</strong>
+    ACH Credit pushes funds from the Originator to the Receiver. ACH Debit pulls funds from the Receiver's account with prior authorization. Both use the same network infrastructure but carry different return timeframes and authorization requirements.
+  </div>
+
+  <!-- KEY PARTICIPANTS -->
+  <h2 id="participants">Key Participants</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Participant</th><th>Role</th><th>Responsibility</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Originator</strong></td>
+          <td>Initiates the payment</td>
+          <td>Obtains authorization, submits payment file to ODFI, accepts liability for unauthorized transactions</td>
+        </tr>
+        <tr>
+          <td><strong>ODFI</strong><br>(Originating Depository Financial Institution)</td>
+          <td>Originator's bank</td>
+          <td>Receives ACH file from Originator, validates format, transmits to ACH Operator, accepts warranty for entries</td>
+        </tr>
+        <tr>
+          <td><strong>ACH Operator</strong></td>
+          <td>Clearinghouse</td>
+          <td>Routes entries between ODFI and RDFI. Either FedACH (Federal Reserve) or EPN (The Clearing House)</td>
+        </tr>
+        <tr>
+          <td><strong>RDFI</strong><br>(Receiving Depository Financial Institution)</td>
+          <td>Receiver's bank</td>
+          <td>Receives entries from ACH Operator, posts to Receiver's account, initiates returns if applicable</td>
+        </tr>
+        <tr>
+          <td><strong>Receiver</strong></td>
+          <td>Account holder</td>
+          <td>Grants authorization to Originator; account is credited (ACH Credit) or debited (ACH Debit)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SEC CODES -->
+  <h2 id="sec-codes">Standard Entry Class (SEC) Codes</h2>
+  <p>
+    NACHA defines Standard Entry Class (SEC) codes that identify the nature of the ACH transaction and the authorization type. The SEC code is a required field in every ACH entry. Operations teams must verify that the SEC code matches the transaction type, authorization on file, and applicable return timeframe.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>SEC Code</th><th>Full Name</th><th>Transaction Type</th><th>Authorization Required</th><th>Typical Use Case</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="rc-code">PPD</code></td>
+          <td>Prearranged Payment &amp; Deposit</td>
+          <td>Credit or Debit</td>
+          <td>Written authorization (consumer)</td>
+          <td>Payroll direct deposit, consumer recurring payments</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">CCD</code></td>
+          <td>Corporate Credit or Debit</td>
+          <td>Credit or Debit</td>
+          <td>Written authorization (corporate)</td>
+          <td>B2B payments, vendor payments, corporate disbursements</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">CTX</code></td>
+          <td>Corporate Trade Exchange</td>
+          <td>Credit or Debit</td>
+          <td>Written authorization (corporate)</td>
+          <td>B2B with addenda records for remittance data (up to 9,999 addenda)</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">WEB</code></td>
+          <td>Internet-Initiated Entry</td>
+          <td>Debit</td>
+          <td>Internet authorization (consumer)</td>
+          <td>Online bill payment, e-commerce, subscription services</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">TEL</code></td>
+          <td>Telephone-Initiated Entry</td>
+          <td>Debit</td>
+          <td>Verbal authorization (recorded)</td>
+          <td>One-time phone-initiated consumer payment</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">IAT</code></td>
+          <td>International ACH Transaction</td>
+          <td>Credit or Debit</td>
+          <td>Written authorization</td>
+          <td>Cross-border ACH involving foreign institutions; OFAC screening mandatory</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">CIE</code></td>
+          <td>Customer-Initiated Entry</td>
+          <td>Credit</td>
+          <td>Written authorization (consumer)</td>
+          <td>Consumer-initiated online transfers to business or biller</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">POP</code></td>
+          <td>Point of Purchase</td>
+          <td>Debit</td>
+          <td>Written authorization at POS</td>
+          <td>Check conversion at retail point of sale</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">RCK</code></td>
+          <td>Represented Check Entry</td>
+          <td>Debit</td>
+          <td>Consumer notification</td>
+          <td>Re-presentment of a returned check as ACH debit</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PROCESSING FLOW -->
+  <h2 id="processing-flow">Processing Flow</h2>
+  <p>ACH entries move through the following stages from initiation to posting. Operations teams interact primarily at file ingestion (ODFI side) and exception handling (RDFI side).</p>
+
+  <div class="flow-diagram">
+    <div class="flow-box">Originator<br>Submits File</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">ODFI<br>Validates &amp; Transmits</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">ACH Operator<br>(FedACH / EPN)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">RDFI<br>Receives Entries</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Core System<br>Posts to Account</div>
+  </div>
+
+  <h3>Step-by-Step</h3>
+  <ol class="step-list">
+    <li><strong>File Submission:</strong> The Originator creates an ACH file in NACHA format (94-character fixed-width records) and submits it to the ODFI by the agreed cut-off time.</li>
+    <li><strong>ODFI Validation:</strong> The ODFI validates the file structure (File Header, Batch Header, Detail Records, Addenda, Batch Control, File Control). Errors at this stage result in file rejection — not individual entry returns.</li>
+    <li><strong>Effective Entry Date Check:</strong> The ODFI checks that the Effective Entry Date is a valid banking day. Future-dated entries are held in a pending queue until the effective date.</li>
+    <li><strong>Transmission to ACH Operator:</strong> The ODFI transmits the validated file to the ACH Operator (FedACH or EPN) within the submission window. FedACH has multiple daily submission windows; same-day ACH has three additional windows.</li>
+    <li><strong>Sorting and Routing:</strong> The ACH Operator sorts entries by receiving ABA routing number and routes each entry to the appropriate RDFI.</li>
+    <li><strong>RDFI Receipt and Posting:</strong> The RDFI receives the entries, validates the account number, and posts the transaction to the Receiver's account. A credit is posted before the cut-off time on the settlement date.</li>
+    <li><strong>Settlement:</strong> The Federal Reserve settles net positions between participating institutions through the RDFI's and ODFI's Federal Reserve accounts. Settlement is final for same-day ACH; next-day settlement for standard entries.</li>
+  </ol>
+
+  <h3>NACHA File Structure</h3>
+  <p>Every ACH file follows a strict 94-character fixed-width record format defined by NACHA. Understanding this structure is essential for operations teams validating file submissions and diagnosing transmission errors.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Record Type</th><th>Code</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><strong>File Header</strong></td><td><code>1</code></td><td>One per file. Identifies immediate destination (Fed routing #), origin, file creation date/time, and file ID modifier.</td></tr>
+        <tr><td><strong>Batch Header</strong></td><td><code>5</code></td><td>One per batch. Contains SEC code, company name, company ID, effective entry date, settlement date, service class code.</td></tr>
+        <tr><td><strong>Entry Detail</strong></td><td><code>6</code></td><td>One per transaction. Contains transaction code, receiving institution routing number, account number, amount, individual name/ID.</td></tr>
+        <tr><td><strong>Addenda Record</strong></td><td><code>7</code></td><td>Optional. Carries remittance information for CCD+, CTX entries. Required for IAT entries.</td></tr>
+        <tr><td><strong>Batch Control</strong></td><td><code>8</code></td><td>One per batch. Contains entry/addenda count, hash total (sum of routing numbers), debit/credit dollar totals.</td></tr>
+        <tr><td><strong>File Control</strong></td><td><code>9</code></td><td>One per file. Contains batch count, block count, entry/addenda count, hash totals, debit/credit totals.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="warning">
+    <strong>Hash Total Mismatch</strong>
+    The hash total in the Batch Control and File Control records is the sum of all routing transit numbers in Entry Detail records (mod 10). A mismatch causes file-level rejection. This is a common cause of ACH file failures and must be resolved before resubmission.
+  </div>
+
+  <!-- SETTLEMENT TIMELINE -->
+  <h2 id="settlement">Settlement Timeline</h2>
+  <p>ACH settlement dates are expressed as the Effective Entry Date — the date on which the RDFI is to make funds available or post the debit.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Entry Type</th><th>Submission Deadline</th><th>Settlement Date</th><th>Funds Availability (Credit)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Standard ACH Credit</strong></td>
+          <td>By end of business day D</td>
+          <td>D+1 (next banking day)</td>
+          <td>RDFI must make funds available by D+1 morning</td>
+        </tr>
+        <tr>
+          <td><strong>Standard ACH Debit</strong></td>
+          <td>By end of business day D</td>
+          <td>D+1 (next banking day)</td>
+          <td>Funds debited on D+1</td>
+        </tr>
+        <tr>
+          <td><strong>Same-Day ACH Credit</strong> (Window 1)</td>
+          <td>10:30 AM ET</td>
+          <td>Same day (D)</td>
+          <td>By 1:30 PM ET same day</td>
+        </tr>
+        <tr>
+          <td><strong>Same-Day ACH Credit</strong> (Window 2)</td>
+          <td>2:45 PM ET</td>
+          <td>Same day (D)</td>
+          <td>By 5:00 PM ET same day</td>
+        </tr>
+        <tr>
+          <td><strong>Same-Day ACH Credit</strong> (Window 3)</td>
+          <td>4:45 PM ET</td>
+          <td>Same day (D)</td>
+          <td>By 6:00 PM ET same day</td>
+        </tr>
+        <tr>
+          <td><strong>Same-Day ACH Debit</strong></td>
+          <td>2:45 PM ET</td>
+          <td>Same day (D)</td>
+          <td>Funds debited same day</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <strong>Weekend and Holiday Processing</strong>
+    ACH does not settle on Saturdays, Sundays, or Federal Reserve Bank holidays. An Effective Entry Date falling on a non-banking day is adjusted to the next banking day. Operations teams must account for holiday calendars when scheduling payroll and batch submissions.
+  </div>
+
+  <!-- SAME-DAY ACH -->
+  <h2 id="same-day">Same-Day ACH</h2>
+  <p>
+    Same-Day ACH (SDA) was introduced by NACHA in three phases (2016–2018) and expanded with a third submission window in 2021. It enables credits and debits to settle within the same banking day, provided entries are submitted before the applicable cut-off window.
+  </p>
+
+  <h3>Eligibility Criteria</h3>
+  <ul>
+    <li>Transaction amount must be <strong>$1,000,000 or less</strong> per entry.</li>
+    <li>IAT (International ACH Transaction) entries are <strong>not eligible</strong> for same-day processing.</li>
+    <li>The Originator must explicitly request same-day by using a same-day service class code or the ODFI must flag entries accordingly in the Batch Header.</li>
+    <li>Both the ODFI and RDFI must participate in same-day ACH.</li>
+  </ul>
+
+  <h3>Same-Day Fee</h3>
+  <p>
+    NACHA mandates that RDFIs charge ODFIs a Same-Day ACH fee, which ODFIs may pass on to Originators. As of 2023, the fee is <strong>$0.052 per same-day entry</strong>. This fee compensates RDFIs for the operational cost of accelerated processing.
+  </p>
+
+  <!-- RETURNS -->
+  <h2 id="returns">Return Codes and Handling</h2>
+  <p>
+    When an ACH entry cannot be processed or is disputed, the RDFI or ODFI initiates a return. Returns are sent back through the ACH network as a new entry with a standard return reason code. Operations teams must monitor return rates and act within NACHA-mandated timeframes.
+  </p>
+
+  <div class="important">
+    <strong>Return Rate Thresholds</strong>
+    NACHA monitors return rates and imposes sanctions on ODFIs that exceed: <strong>0.5%</strong> for unauthorized debits (R05, R07, R10, R29), <strong>3.0%</strong> overall debit return rate, and <strong>15.0%</strong> administrative return rate (R02, R03, R04). Exceeding these thresholds can result in fines and suspension.
+  </div>
+
+  <h3>Return Timeframes</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Return Type</th><th>Initiated By</th><th>Deadline</th></tr></thead>
+      <tbody>
+        <tr><td>Standard return (RDFI)</td><td>RDFI</td><td>2 banking days after the settlement date</td></tr>
+        <tr><td>Late return (RDFI)</td><td>RDFI</td><td>Extended under specific conditions (written agreement)</td></tr>
+        <tr><td>Unauthorized debit (consumer)</td><td>RDFI on behalf of Receiver</td><td>60 calendar days from statement</td></tr>
+        <tr><td>Disputed authorization (consumer PPD)</td><td>RDFI on behalf of Receiver</td><td>60 calendar days from statement</td></tr>
+        <tr><td>Corrected return (ODFI)</td><td>ODFI</td><td>Within 1 banking day of return receipt</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Common Return Codes</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Code</th><th>Description</th><th>Credit / Debit?</th><th>Initiated By</th><th>Ops Action Required</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="rc-code">R01</code></td>
+          <td>Insufficient Funds</td>
+          <td>Debit</td>
+          <td>RDFI</td>
+          <td>Notify Originator; re-present within 180 days if permitted; check Originator return rate</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R02</code></td>
+          <td>Account Closed</td>
+          <td>Credit or Debit</td>
+          <td>RDFI</td>
+          <td>Contact Originator; update beneficiary account; do not re-present</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R03</code></td>
+          <td>No Account / Unable to Locate Account</td>
+          <td>Credit or Debit</td>
+          <td>RDFI</td>
+          <td>Verify account number with Originator; do not re-present</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R04</code></td>
+          <td>Invalid Account Number Structure</td>
+          <td>Credit or Debit</td>
+          <td>RDFI</td>
+          <td>Confirm correct account number format with Originator</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R05</code></td>
+          <td>Unauthorized Debit — Corporate Account</td>
+          <td>Debit (CCD/CTX)</td>
+          <td>RDFI</td>
+          <td>Investigate authorization records; flag for potential fraud review</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R06</code></td>
+          <td>Returned per ODFI Request</td>
+          <td>Credit</td>
+          <td>RDFI</td>
+          <td>Return requested by ODFI within 5 banking days; confirm return receipt</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R07</code></td>
+          <td>Authorization Revoked</td>
+          <td>Debit</td>
+          <td>RDFI</td>
+          <td>Stop all future entries for this authorization; escalate if pattern indicates fraud</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R08</code></td>
+          <td>Payment Stopped</td>
+          <td>Debit</td>
+          <td>RDFI</td>
+          <td>Receiver has issued stop payment; contact Originator</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R10</code></td>
+          <td>Customer Advises Not Authorized</td>
+          <td>Debit</td>
+          <td>RDFI</td>
+          <td>Highest priority — potential unauthorized debit. Investigate immediately; preserve authorization records</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R11</code></td>
+          <td>Customer Advises Entry Not in Accordance with Authorization</td>
+          <td>Debit</td>
+          <td>RDFI</td>
+          <td>Authorization exists but amount or timing is disputed; review Originator's debit terms</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R16</code></td>
+          <td>Account Frozen</td>
+          <td>Credit or Debit</td>
+          <td>RDFI</td>
+          <td>Do not re-present; contact compliance if related to legal hold or OFAC match</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R20</code></td>
+          <td>Non-Transaction Account</td>
+          <td>Credit or Debit</td>
+          <td>RDFI</td>
+          <td>Entry posted to a savings or money market account with transaction restrictions</td>
+        </tr>
+        <tr>
+          <td><code class="rc-code">R29</code></td>
+          <td>Corporate Customer Advises Not Authorized</td>
+          <td>Debit (CCD/CTX)</td>
+          <td>RDFI</td>
+          <td>Corporate equivalent of R10; high priority; escalate to compliance</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- COMPLIANCE -->
+  <h2 id="compliance">Compliance Requirements</h2>
+  <p>ACH processing must comply with NACHA Operating Rules, Regulation E, and applicable federal AML/OFAC requirements. The following checks are mandatory for all ACH transactions processed by this institution.</p>
+
+  <h3>OFAC Sanctions Screening</h3>
+  <ul>
+    <li>All ACH credits and IAT entries must be screened against the OFAC Specially Designated Nationals (SDN) List before posting.</li>
+    <li>Matches must be placed on hold and escalated immediately to the Compliance team. Do not post or return without Compliance approval.</li>
+    <li>IAT entries carry additional screening requirements — all parties (Originator, ODFI, Receiver, RDFI, financial intermediaries) must be screened.</li>
+  </ul>
+
+  <h3>Authorization Requirements</h3>
+  <ul>
+    <li>Debit entries require valid authorization from the Receiver before initiation.</li>
+    <li>Written authorizations must be retained for a minimum of 2 years after the last transaction entry under that authorization.</li>
+    <li>Operations teams must not process debit entries flagged with missing or expired authorization records — escalate to the Originator relationship manager.</li>
+  </ul>
+
+  <h3>AML Transaction Monitoring</h3>
+  <ul>
+    <li>Unusual ACH activity — structuring patterns, rapid velocity, beneficiary mismatches — must be flagged to the BSA/AML team.</li>
+    <li>Currency Transaction Report (CTR): ACH cash-equivalent transactions exceeding $10,000 may require CTR filing depending on nature and account type.</li>
+    <li>Suspicious Activity Report (SAR): File within 30 calendar days of identification.</li>
+  </ul>
+
+  <div class="tip">
+    <strong>Regulation E — Consumer Protections</strong>
+    Under Regulation E (12 CFR Part 205), consumers have the right to dispute unauthorized ACH debits within 60 days of statement delivery. The institution must investigate and provisionally credit within 10 business days. Resolution must be completed within 45 days.
+  </div>
+
+  <!-- EXCEPTIONS -->
+  <h2 id="exceptions">Exception Handling</h2>
+
+  <h3>Notification of Change (NOC)</h3>
+  <p>
+    A Notification of Change (NOC) is sent by the RDFI when an ACH entry is successfully posted but the account or routing information has changed (account number update, routing number change, name correction, etc.). NOCs are not returns — the original transaction was posted. However, Originators are required to update their records within 6 banking days of receiving an NOC.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>NOC Code</th><th>Change Description</th><th>Required Action</th></tr></thead>
+      <tbody>
+        <tr><td><code class="rc-code">C01</code></td><td>Incorrect DFI Account Number</td><td>Update account number in origination records</td></tr>
+        <tr><td><code class="rc-code">C02</code></td><td>Incorrect Routing / Transit Number</td><td>Update routing number</td></tr>
+        <tr><td><code class="rc-code">C03</code></td><td>Incorrect Routing and Account Number</td><td>Update both routing number and account number</td></tr>
+        <tr><td><code class="rc-code">C05</code></td><td>Incorrect Transaction Code</td><td>Verify checking vs. savings account type</td></tr>
+        <tr><td><code class="rc-code">C07</code></td><td>Incorrect Routing, Account Number, and Transaction Code</td><td>Update all three fields</td></tr>
+        <tr><td><code class="rc-code">C09</code></td><td>Incorrect Individual ID Number</td><td>Correct the individual identification number</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Reversals</h3>
+  <p>
+    An ACH reversal corrects a posted transaction that was sent in error (wrong amount, wrong account, duplicate entry). Reversals must be initiated within <strong>5 banking days</strong> of the settlement date of the original entry. The reversal entry must include:
+  </p>
+  <ul>
+    <li>The same dollar amount as the original entry</li>
+    <li>The same account information as the original entry</li>
+    <li>The notation "REVERSAL" in the Company Entry Description field</li>
+    <li>A memo explaining the reason for reversal</li>
+  </ul>
+  <div class="important">
+    <strong>Reversal Does Not Guarantee Recovery</strong>
+    If the Receiver's account has insufficient funds at the time of reversal, the reversal itself may be returned (R01). A reversal is not a guaranteed fund recovery mechanism. For authorized recovery of misdirected funds, initiate the ODFI return request procedure (R06) with the RDFI.
+  </div>
+
+  <!-- RECONCILIATION -->
+  <h2 id="reconciliation">Reconciliation Procedures</h2>
+  <p>Daily ACH reconciliation ensures that all submitted entries match the settled amounts in the institution's Federal Reserve account (FRB master account or correspondent account).</p>
+
+  <h3>Daily Reconciliation Checklist</h3>
+  <ol class="step-list">
+    <li>Obtain the ACH settlement report from FedACH or EPN for the business day.</li>
+    <li>Match net settlement amounts (debits and credits) against the FRB account activity for the same date.</li>
+    <li>Reconcile all return entries received against the original debit/credit postings in the core banking system.</li>
+    <li>Confirm all NOC entries have been logged and routed to the Originator relationship team for correction within the 6-day NACHA requirement.</li>
+    <li>Verify that no entries are pending in the exception queue without resolution.</li>
+    <li>Generate the daily ACH exception report and route to the Operations Supervisor for sign-off.</li>
+    <li>Archive settlement confirmation and exception reports per records retention policy (7 years minimum).</li>
+  </ol>
+
+  <h3>Suspense Account Management</h3>
+  <p>
+    ACH transactions that cannot be immediately posted to a beneficiary account are held in a suspense account. Items may be held due to: account number not found, account closed (pending return), OFAC review, or system processing errors.
+  </p>
+  <ul>
+    <li>Suspense items must be reviewed and resolved within <strong>2 banking days</strong> of receipt.</li>
+    <li>Items unresolved after 2 days must be returned to the ODFI or escalated to the Operations Supervisor.</li>
+    <li>Suspense balances exceeding institutionally-defined thresholds require immediate escalation to the Operations Manager and Compliance team.</li>
+  </ul>
+
+  <div class="doc-nav">
+    <a href="index.html">← Back to Overview</a>
+    <a href="fedwire.html">Next: Fedwire →</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span>US Payments Hub · ACH Processing · v1.0 · March 2026</span>
+  <span>Internal Use Only</span>
+</footer>
+
+</body>
+</html>

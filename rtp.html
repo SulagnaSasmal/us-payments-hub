@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTP Real-Time Payments — US Payments Hub</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="header-brand" href="index.html">US Payments Hub <span>· Operations Reference</span></a>
+  <div class="header-breadcrumb"><a href="index.html">Home</a> › RTP</div>
+  <span class="header-rail-badge">RTP</span>
+</header>
+
+<nav class="sidebar">
+  <div class="nav-section">Overview</div>
+  <a href="index.html">Introduction</a>
+  <a href="index.html#rail-comparison">Rail Comparison</a>
+  <div class="nav-section">Payment Rails</div>
+  <a href="ach.html">ACH</a>
+  <a href="fedwire.html">Fedwire</a>
+  <a href="swift.html">SWIFT</a>
+  <a href="rtp.html" class="active">RTP — Real-Time Payments</a>
+  <a href="fednow.html">FedNow</a>
+  <a href="card.html">Card Network Processing</a>
+  <div class="nav-section">On This Page</div>
+  <a href="#overview">Overview</a>
+  <a href="#how-rtp-works">How RTP Works</a>
+  <a href="#processing-flow">Processing Flow</a>
+  <a href="#transaction-limits">Transaction Limits</a>
+  <a href="#rfp">Request for Payment (RfP)</a>
+  <a href="#compliance">Compliance</a>
+  <a href="#exceptions">Exceptions</a>
+  <a href="#rtp-vs-fednow">RTP vs. FedNow</a>
+  <div class="nav-section">Reference</div>
+  <a href="scenarios.html">Scenario Walkthroughs</a>
+</nav>
+
+<main class="main">
+
+  <h1>RTP — Real-Time Payments</h1>
+  <p class="topic-meta">
+    <span>Rail: RTP</span>
+    <span>Operator: The Clearing House (TCH)</span>
+    <span>Standard: ISO 20022 pacs.008</span>
+    <span>Availability: 24/7/365</span>
+    <span>Last updated: March 2026</span>
+  </p>
+
+  <h2 id="overview">Overview</h2>
+  <p>
+    RTP (Real-Time Payments) is the first US real-time payment rail, launched by The Clearing House (TCH) in November 2017. It enables immediate, irrevocable credit transfers between participating financial institutions, 24 hours a day, 7 days a week, 365 days a year — including weekends and holidays.
+  </p>
+  <p>
+    RTP is a <strong>credit-push only</strong> rail — only the sending party can initiate a payment. There are no pull/debit transactions on RTP. Once a payment is sent and accepted, it cannot be reversed by the sender. This irrevocability is a core design feature that distinguishes RTP from ACH.
+  </p>
+
+  <div class="note">
+    <strong>Network Coverage</strong>
+    As of early 2026, RTP reaches approximately 65% of US demand deposit accounts through over 300 participating financial institutions, including most major US banks and a growing number of community banks and credit unions.
+  </div>
+
+  <h2 id="how-rtp-works">How RTP Works</h2>
+  <p>
+    Unlike ACH (batch) or Fedwire (Federal Reserve account-to-account), RTP uses a centralized real-time clearing infrastructure operated by TCH. Settlement occurs through a pre-funded settlement account at the Federal Reserve Bank of New York — each RTP participant must maintain a funded position in the TCH joint settlement account.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Characteristic</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Settlement mechanism</td><td>Real-time, immediate, net funded position at Federal Reserve Bank of New York</td></tr>
+        <tr><td>Settlement finality</td><td>Immediate upon acceptance by the Receiving Bank</td></tr>
+        <tr><td>Payment direction</td><td>Credit push only (sender initiates, receiver accepts)</td></tr>
+        <tr><td>Transaction limit</td><td><strong>$1,000,000</strong> per transaction</td></tr>
+        <tr><td>Message standard</td><td>ISO 20022 pacs.008 (Customer Credit Transfer Initiation)</td></tr>
+        <tr><td>Operating hours</td><td>24/7/365 — no downtime windows</td></tr>
+        <tr><td>Reversals</td><td>Not available. Irrevocable upon acceptance.</td></tr>
+        <tr><td>Returns</td><td>Possible in limited cases — only if the RDFI cannot post (e.g., account closed, invalid account)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="processing-flow">Processing Flow</h2>
+
+  <div class="flow-diagram">
+    <div class="flow-box">Sender<br>Initiates</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Sending Bank<br>Validates</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">TCH RTP<br>Network</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Receiving Bank<br>Posts</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Receiver<br>Notified</div>
+  </div>
+
+  <ol class="step-list">
+    <li><strong>Payment Initiation:</strong> The Sending Bank's customer (individual or business) initiates an RTP credit transfer via mobile app, online banking, or API integration. The instruction includes the receiving bank's routing number, beneficiary account number, amount, and remittance information.</li>
+    <li><strong>Sending Bank Validation:</strong> The Sending Bank validates the message format (ISO 20022 pacs.008), confirms sufficient funds in the sender's account, performs OFAC screening, and confirms the Receiving Bank participates in RTP.</li>
+    <li><strong>Submission to TCH RTP:</strong> The Sending Bank submits the pacs.008 message to the TCH RTP system. TCH validates the message and routes it to the Receiving Bank.</li>
+    <li><strong>Receiving Bank Response:</strong> The Receiving Bank has a defined response window (typically seconds) to accept or return the payment. If the account is valid and open, the payment is accepted. The Receiving Bank posts the credit to the beneficiary account.</li>
+    <li><strong>Settlement:</strong> TCH debits the Sending Bank's prefunded position in the joint settlement account at the Federal Reserve Bank of New York and credits the Receiving Bank's position. Settlement is immediate and final.</li>
+    <li><strong>Confirmation:</strong> Both the Sending Bank and the Receiving Bank receive confirmation from the TCH RTP system. The sender receives a payment confirmation (pacs.002 or equivalent status message).</li>
+  </ol>
+
+  <div class="important">
+    <strong>No Reversal After Acceptance</strong>
+    Once the Receiving Bank accepts the RTP payment and TCH settles, the transaction is final. If the Sending Bank's customer sent the payment in error, they must contact the beneficiary directly to request a return. The bank cannot force a reversal. Customer service teams must be trained on this critical distinction from ACH.
+  </div>
+
+  <h2 id="transaction-limits">Transaction Limits and Controls</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Limit Type</th><th>Amount</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Maximum per transaction (TCH network)</td>
+          <td><strong>$1,000,000</strong></td>
+          <td>Individual institutions may set lower limits for their customers</td>
+        </tr>
+        <tr>
+          <td>Typical institutional retail limit</td>
+          <td>$25,000 – $100,000</td>
+          <td>Banks commonly cap retail RTP at lower thresholds for fraud prevention</td>
+        </tr>
+        <tr>
+          <td>Business/corporate limit</td>
+          <td>Up to $1,000,000</td>
+          <td>Higher limits available for verified business customers with appropriate controls</td>
+        </tr>
+        <tr>
+          <td>Minimum</td>
+          <td>$0.01</td>
+          <td>No practical minimum enforced by TCH</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="rfp">Request for Payment (RfP)</h2>
+  <p>
+    RTP's Request for Payment (RfP) feature allows a payee (biller, business, individual) to send a standardized payment request to a payer. The payer reviews and approves the request, triggering an RTP credit transfer. RfP is distinct from ACH debit — the payer always initiates the payment and controls the release of funds.
+  </p>
+
+  <h3>RfP Use Cases</h3>
+  <ul>
+    <li>Billing and invoice payment — a business sends an RfP to a corporate client for outstanding invoices</li>
+    <li>P2P payment requests — individual requests payment from another individual (similar to Zelle/Venmo request functionality, but directly bank-to-bank)</li>
+    <li>Mortgage/rent collection — landlord sends RfP to tenant on due date</li>
+    <li>Insurance premium collection — insurer sends periodic payment requests</li>
+  </ul>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Step</th><th>Action</th><th>Message Type</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Payee sends payment request to Payer's bank</td><td>pain.013 (Creditor Payment Activation Request)</td></tr>
+        <tr><td>2</td><td>Payer's bank presents request to Payer for approval</td><td>Internal notification</td></tr>
+        <tr><td>3</td><td>Payer approves — Payer's bank sends RTP credit transfer</td><td>pacs.008</td></tr>
+        <tr><td>4</td><td>Payee's bank confirms receipt</td><td>pacs.002 (Payment Status Report)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="compliance">Compliance Requirements</h2>
+
+  <h3>OFAC Screening</h3>
+  <ul>
+    <li>All RTP transactions must be screened against OFAC SDN and applicable sanctions lists prior to submission to the TCH network.</li>
+    <li>Because RTP is immediate, OFAC screening must be pre-configured in the payment processing workflow and must not cause processing delays for clean transactions.</li>
+    <li>Automated screening with near-zero false-positive rate is essential — manual review queues are incompatible with real-time SLAs.</li>
+  </ul>
+
+  <h3>Fraud Prevention Considerations</h3>
+  <ul>
+    <li>The irrevocable nature of RTP makes it a high-value target for social engineering and authorized push payment (APP) fraud.</li>
+    <li>Implement behavioral analytics to detect anomalous RTP patterns: first-time payees, large amounts, account activity inconsistent with customer profile.</li>
+    <li>Customer confirmation steps (e.g., "Are you sure? RTP payments cannot be reversed") reduce APP fraud liability exposure.</li>
+    <li>Consider cooling-off periods or velocity controls for first-time RTP beneficiaries above defined thresholds.</li>
+  </ul>
+
+  <h2 id="exceptions">Exception Handling</h2>
+
+  <h3>RTP Returns</h3>
+  <p>RTP payments can be returned in a limited set of circumstances — only when the Receiving Bank cannot post the payment. Unlike ACH, there is no customer-initiated return window.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Return Reason</th><th>Condition</th><th>Timeframe</th></tr></thead>
+      <tbody>
+        <tr><td>Account Closed</td><td>Receiving account no longer exists at the RDFI</td><td>Must be returned before TCH settlement; typically within seconds</td></tr>
+        <tr><td>Invalid Account Number</td><td>Account number does not exist or does not match</td><td>Before settlement</td></tr>
+        <tr><td>Account Blocked</td><td>RDFI cannot post due to regulatory hold, fraud block, or court order</td><td>Before settlement</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="warning">
+    <strong>No NSF Returns on RTP</strong>
+    Unlike ACH, RTP does not return for insufficient funds (NSF) at the Receiving Bank. If the beneficiary account is valid and open, the payment is accepted and posted regardless of the beneficiary's account balance. The Receiving Bank assumes the risk of posting.
+  </div>
+
+  <h2 id="rtp-vs-fednow">RTP vs. FedNow — Operational Comparison</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Attribute</th><th>RTP (TCH)</th><th>FedNow</th></tr></thead>
+      <tbody>
+        <tr><td>Operator</td><td>The Clearing House (private, bank-owned)</td><td>Federal Reserve (government)</td></tr>
+        <tr><td>Launch</td><td>November 2017</td><td>July 2023</td></tr>
+        <tr><td>Transaction limit</td><td>$1,000,000</td><td>$500,000 (default); up to $1,000,000 for eligible participants</td></tr>
+        <tr><td>Participant base</td><td>Large/mid-size banks; growing</td><td>Community banks, credit unions, broader reach expected</td></tr>
+        <tr><td>Message standard</td><td>ISO 20022</td><td>ISO 20022</td></tr>
+        <tr><td>RfP (Request for Payment)</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>Interoperability</td><td>Not yet — separate from FedNow</td><td>Not yet — industry working on interop standards</td></tr>
+        <tr><td>Settlement</td><td>TCH joint account at FRBNY</td><td>FRB master account (direct)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="doc-nav">
+    <a href="swift.html">← Back to SWIFT</a>
+    <a href="fednow.html">Next: FedNow →</a>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <span>US Payments Hub · RTP · v1.0 · March 2026</span>
+  <span>Internal Use Only</span>
+</footer>
+
+</body>
+</html>
