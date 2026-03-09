@@ -327,8 +327,11 @@ pre code { background: none; color: inherit; padding: 0; }
   color: var(--text-muted);
   border-top: 1px solid var(--border);
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: 0.25rem;
 }
+.site-footer .copyright { width: 100%; border-top: 1px solid var(--border); padding-top: 0.5rem; margin-top: 0.25rem; font-style: italic; }
 
 /* ── INDEX PAGE GRID ── */
 .rail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
