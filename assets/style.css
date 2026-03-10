@@ -359,3 +359,48 @@ pre code { background: none; color: inherit; padding: 0; }
   .rail-grid { grid-template-columns: 1fr; }
   h1 { font-size: 1.5rem; }
 }
+
+/* ═══════════════════════════════════════════════
+   DARK THEME — US Payments Hub
+   ═══════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --primary:       #90caf9;
+  --primary-dark:  #0f2540;
+  --accent:        #58a6ff;
+  --accent-light:  rgba(88,166,255,0.12);
+  --warning:       #fbbf24;
+  --warning-bg:    rgba(251,191,36,0.12);
+  --warning-border:#f59e0b;
+  --success:       #4ade80;
+  --success-bg:    rgba(74,222,128,0.12);
+  --danger:        #f87171;
+  --danger-bg:     rgba(248,113,113,0.12);
+  --text:          #e6edf3;
+  --text-secondary:#8b949e;
+  --text-muted:    #6e7681;
+  --border:        #30363d;
+  --border-light:  #21262d;
+  --bg:            #0d1117;
+  --bg-card:       #161b22;
+  --code-bg:       #0d1117;
+}
+[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+[data-theme="dark"] .sidebar { background: var(--bg-card); border-right-color: var(--border); }
+[data-theme="dark"] .sidebar a:hover,
+[data-theme="dark"] .sidebar a.active { background: var(--accent-light); color: var(--accent); }
+
+/* Theme toggle */
+.theme-toggle {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #bfdbfe;
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 3px 9px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-left: auto;
+  transition: background 0.2s;
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.18); }
+

@@ -61,3 +61,32 @@ Hosted on GitHub Pages: [View Live →](https://sulagnasasmal.github.io/us-payme
 Senior Specialist Technical Writer | Documentation Architect
 19+ years in FinTech, enterprise SaaS, and financial systems documentation
 [Portfolio](https://sulagnasasmal.github.io/sulagnasasmal-site/) · [GitHub](https://github.com/SulagnaSasmal) · [DocCraft AI](https://doccraft-ten.vercel.app/)
+
+---
+
+## Dark / Light Mode
+
+All pages support dark and light themes via a toggle button (◐ / ☀) in the header. Theme preference persists in `localStorage`. System `prefers-color-scheme` is respected on first visit.
+
+## Status
+
+**Phase 1 (Domain Documentation) — Complete / Stable**
+
+| Rail / Section | Status |
+|----------------|--------|
+| Overview & Rail Comparison Matrix | Complete |
+| ACH Processing (NACHA codes, returns R01–R29) | Complete |
+| Fedwire (ISO 20022 migration, March 2025) | Complete |
+| SWIFT Correspondent Banking (MT/MX) | Complete |
+| RTP Real-Time Payments | Complete |
+| FedNow Instant Payments | Complete |
+| Card Network Processing | Complete |
+| 12 Scenario Walkthroughs | Complete |
+| Dark / light theme support | Complete |
+
+## Future Enhancements
+
+- FedNow Phase 2 features (Request for Payment, expanded liquidity tools)
+- ISO 20022 MX message field reference tables
+- SWIFT gpi tracker integration documentation
+- NACHA Same Day ACH 2026 rule updates
